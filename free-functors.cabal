@@ -24,7 +24,7 @@ build-type:          Simple
 cabal-version:       >= 1.10
 
 extra-source-files:
-  examples/*
+  examples/*.hs
 
 Library
   HS-Source-Dirs:    

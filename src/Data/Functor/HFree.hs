@@ -20,7 +20,7 @@
 -- A free functor is left adjoint to a forgetful functor.
 -- In this package the forgetful functor forgets class constraints.
 --
--- Compared to `Data.Functor.Free` we're going up a level.
+-- Compared to @Data.Functor.Free@ we're going up a level.
 -- These free functors go between categories of functors and the natural
 -- transformations between them.
 -----------------------------------------------------------------------------
@@ -31,8 +31,10 @@ import Control.Applicative
 import Control.Monad.Trans.Class
 
 
+-- | Natural transformations.
 type f :~> g = forall b. f b -> g b
 
+-- | The higher order free functor for constraint @c@.
 newtype HFree c f a = HFree { runHFree :: forall g. (c g, Functor g) => (f :~> g) -> g a }
 
 leftAdjunct :: (HFree c f :~> g) -> f :~> g
