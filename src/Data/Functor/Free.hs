@@ -17,24 +17,24 @@
 -- Portability :  non-portable
 --
 -- A free functor is left adjoint to a forgetful functor.
--- In this module the forgetful functor forgets class constraints.
+-- In this package the forgetful functor forgets class constraints.
 -----------------------------------------------------------------------------
 module Data.Functor.Free where
   
-import Data.Constraint
-import Data.Constraint.Forall
-
+import Control.Applicative
 import Control.Monad
 import Control.Comonad
 
-import Control.Applicative
+import Data.Constraint
+import Data.Constraint.Forall
+
 import Data.Functor.Identity
 import Data.Functor.Compose
 import Data.Foldable
 import Data.Traversable
 
 
-
+-- | The free functor for constraint @c@.
 newtype Free c a = Free { runFree :: forall b. c b => (a -> b) -> b }
 
 leftAdjunct :: (Free c a -> b) -> a -> b

@@ -1,7 +1,16 @@
 name:                free-functors
 version:             0
-synopsis:            
-description:         
+synopsis:            Provides free functors that are adjoint to functors that forget class constraints. 
+description:         A free functor is a left adjoint to a forgetful functor. It used to be the case
+                     that the only category that was easy to work with in Haskell was Hask itself, so
+                     there were no interesting forgetful functors.
+                     .
+                     But the new ConstraintKinds feature of GHC provides an easy way of creating
+                     subclasses of Hask. That brings interesting opportunities for free (and cofree) functors.
+                     .
+                     The examples directory contains an implementation of non-empty lists as free semigroups,
+                     and automata as free actions. The standard example of free higher order functors is free monads,
+                     and this definition can be found in Data.Functor.HFree.
 category:            Data, Math
 license:             BSD3
 license-file:        LICENSE
@@ -13,6 +22,9 @@ bug-reports:         http://github.com/sjoerdvisscher/free-functors/issues
 
 build-type:          Simple
 cabal-version:       >= 1.10
+
+extra-source-files:
+  examples/*
 
 Library
   HS-Source-Dirs:    

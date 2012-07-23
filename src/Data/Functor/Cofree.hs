@@ -18,22 +18,22 @@
 -- Portability :  non-portable
 --
 -- A cofree functor is right adjoint to a forgetful functor.
--- In this module the forgetful functor forgets class constraints.
+-- In this package the forgetful functor forgets class constraints.
 -----------------------------------------------------------------------------
 module Data.Functor.Cofree where
   
+import Control.Monad
+import Control.Comonad
+import Control.Applicative
+
 import Data.Constraint
 import Data.Constraint.Forall
 
-import Control.Monad
-import Control.Comonad
-
-import Control.Applicative
 import Data.Functor.Identity
 import Data.Functor.Compose
 
 
-
+-- | The cofree functor for constraint @c@.
 data Cofree c b where
   Cofree :: c a => (a -> b) -> a -> Cofree c b
 

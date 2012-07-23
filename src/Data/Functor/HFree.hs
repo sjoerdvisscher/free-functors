@@ -18,7 +18,7 @@
 -- Portability :  non-portable
 --
 -- A free functor is left adjoint to a forgetful functor.
--- In this module the forgetful functor forgets class constraints.
+-- In this package the forgetful functor forgets class constraints.
 --
 -- Compared to `Data.Functor.Free` we're going up a level.
 -- These free functors go between categories of functors and the natural
