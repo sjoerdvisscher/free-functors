@@ -32,6 +32,7 @@ import Data.Functor.Identity
 import Data.Functor.Compose
 import Data.Foldable
 import Data.Traversable
+import Data.Void
 
 
 -- | The free functor for constraint @c@.
@@ -88,3 +89,5 @@ instance ForallT c (LiftAFree c) => Traversable (Free c) where
 convert :: (c (f a), Applicative f) => Free c a -> f a
 convert = rightAdjunct pure
 
+convertClosed :: c x => Free c Void -> x
+convertClosed = rightAdjunct absurd

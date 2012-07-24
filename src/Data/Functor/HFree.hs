@@ -3,10 +3,6 @@
   , RankNTypes
   , TypeOperators
   , FlexibleInstances
-  , GADTs
-  , MultiParamTypeClasses
-  , UndecidableInstances
-  , ScopedTypeVariables
   #-}
 -----------------------------------------------------------------------------
 -- |
@@ -26,7 +22,6 @@
 -----------------------------------------------------------------------------
 module Data.Functor.HFree where
   
-import Control.Monad
 import Control.Applicative
 import Control.Monad.Trans.Class
 

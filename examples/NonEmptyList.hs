@@ -1,7 +1,4 @@
-{-# LANGUAGE
-    MultiParamTypeClasses
-  , FlexibleInstances
-  #-}
+{-# LANGUAGE FlexibleInstances #-}
 module NonEmptyList where
 
 import Data.Functor.Free
