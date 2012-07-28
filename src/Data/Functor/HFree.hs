@@ -24,6 +24,7 @@ module Data.Functor.HFree where
   
 import Control.Applicative
 import Control.Monad.Trans.Class
+import Data.Functor.Identity
 
 
 -- | Natural transformations.
@@ -53,6 +54,9 @@ lowerFree = rightAdjunct id
 convert :: (c (t f), Functor (t f), Monad f, MonadTrans t) => HFree c f a -> t f a
 convert = rightAdjunct lift
 
+iter :: c Identity => (forall b. f b -> b) -> HFree c f a -> a
+iter f = runIdentity . rightAdjunct (Identity . f)
+
 -- | The free monad of a functor.
 instance Monad (HFree Monad f) where
   return a = HFree $ const (return a)
@@ -68,3 +72,6 @@ instance Applicative (HFree Alternative f) where
 instance Alternative (HFree Alternative f) where
   empty = HFree $ const empty
   HFree f <|> HFree g = HFree $ \k -> f k <|> g k
+  
+wrap :: f (HFree Monad f a) -> HFree Monad f a
+wrap ff = HFree $ \k -> k ff >>= rightAdjunct k
