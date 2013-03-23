@@ -22,7 +22,6 @@
 module Data.Functor.Free where
   
 import Control.Applicative
-import Control.Monad
 import Control.Comonad
 
 import Data.Constraint
@@ -89,5 +88,5 @@ instance ForallT c (LiftAFree c) => Traversable (Free c) where
 convert :: (c (f a), Applicative f) => Free c a -> f a
 convert = rightAdjunct pure
 
-convertClosed :: c x => Free c Void -> x
+convertClosed :: c r => Free c Void -> r
 convertClosed = rightAdjunct absurd
