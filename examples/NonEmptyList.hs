@@ -1,26 +1,28 @@
-{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FlexibleInstances, TemplateHaskell, TypeFamilies, DeriveFunctor, DeriveFoldable, DeriveTraversable #-}
 module NonEmptyList where
 
 import Data.Functor.Free
-
-import Data.Semigroup
+import Data.Algebra
 
 import Control.Applicative
 import Control.Comonad
 import Data.Functor.Identity
 import Data.Functor.Compose
 
+class Semigroup s where
+  (<>) :: s -> s -> s
 
+instance Semigroup [a] where
+  (<>) = (++)
+  
 -- This declaration creates a Functor that is also Applicative.
 type NonEmptyList = Free Semigroup
 
 -- This instance makes NonEmptyList a Monad.
-instance Semigroup (NonEmptyList a) where
-  Free fa <> Free fb = Free $ liftA2 (<>) fa fb
+deriveInstance [t| () => Semigroup (NonEmptyList a) |]
 
 -- This instance makes NonEmptyList Foldable and Traversable.
-instance Applicative f => Semigroup (LiftAFree Semigroup f a) where
-  LiftAFree fa <> LiftAFree fb = LiftAFree $ liftA2 (<>) fa fb
+deriveInstance [t| Applicative f => Semigroup (LiftAFree Semigroup f a) |]
 
 -- The next two instances make NonEmptyList a Comonad.
 instance Semigroup (Identity a) where

@@ -1,18 +1,12 @@
-{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FlexibleInstances, TemplateHaskell, TypeFamilies, DeriveFunctor, DeriveFoldable, DeriveTraversable #-}
 module FreeNum where
 
 import Data.Functor.Free
+import Data.Algebra
 
-import Control.Applicative
 
-instance Num (Free Num a) where
-  Free l + Free r = Free $ (+) <$> l <*> r
-  Free l * Free r = Free $ (*) <$> l <*> r
-  Free l - Free r = Free $ (-) <$> l <*> r
-  negate (Free f) = Free $ negate <$> f
-  abs (Free f)    = Free $ abs <$> f
-  signum (Free f) = Free $ signum <$> f
-  fromInteger i   = Free $ pure (fromInteger i)
+deriveInstance [t| () => Num (Free Num a) |]
+
 
 x, y :: Free Num String
 x = return "x"
