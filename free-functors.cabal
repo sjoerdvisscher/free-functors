@@ -6,7 +6,7 @@ description:         A free functor is a left adjoint to a forgetful functor. It
                      there were no interesting forgetful functors.
                      .
                      But the new ConstraintKinds feature of GHC provides an easy way of creating
-                     subclasses of Hask. That brings interesting opportunities for free (and cofree) functors.
+                     subcategories of Hask. That brings interesting opportunities for free (and cofree) functors.
                      .
                      The examples directory contains an implementation of non-empty lists as free semigroups,
                      and automata as free actions. The standard example of free higher order functors is free monads,
