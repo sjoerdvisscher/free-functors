@@ -110,11 +110,11 @@ convert = rightAdjunct pure
 convertClosed :: c r => Free c Void -> r
 convertClosed = rightAdjunct absurd
 
-type InitialObject c = Free c Void
+-- * Coproducts
 
-initial :: c r => InitialObject c -> r
-initial = rightAdjunct absurd
-
+-- | Products of @Monoid@s are @Monoid@s themselves. But coproducts of @Monoid@s are not. 
+-- However, the free @Monoid@ applied to the coproduct /is/ a @Monoid@, and it is the coproduct in the category of @Monoid@s.
+-- This is also called the free product, and generalizes to any algebraic class.
 type Coproduct c m n = Free c (Either m n)
 
 coproduct :: c r => (m -> r) -> (n -> r) -> Coproduct c m n -> r
@@ -126,11 +126,7 @@ inL = unit . Left
 inR :: c n => n -> Coproduct c m n
 inR = unit . Right
 
-product :: (r -> m) -> (r -> n) -> r -> Free c (m, n)
-product m n r = unit (m r, n r)
+type InitialObject c = Free c Void
 
-fstP :: c m => Free c (m, n) -> m
-fstP = rightAdjunct fst
-
-sndP :: c n => Free c (m, n) -> n
-sndP = rightAdjunct snd
+initial :: c r => InitialObject c -> r
+initial = rightAdjunct absurd
