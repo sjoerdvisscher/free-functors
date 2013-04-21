@@ -9,11 +9,7 @@ import Control.Comonad
 import Data.Functor.Identity
 import Data.Functor.Compose
 
-class Semigroup s where
-  (<>) :: s -> s -> s
-
-instance Semigroup [a] where
-  (<>) = (++)
+import Data.Semigroup
   
 -- This declaration creates a Functor that is also Applicative.
 type NonEmptyList = Free Semigroup
