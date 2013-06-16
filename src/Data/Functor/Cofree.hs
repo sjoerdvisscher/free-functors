@@ -88,11 +88,11 @@ type Product c m n = Cofree c (m, n)
 product :: c a => (a -> m) -> (a -> n) -> a -> Product c m n
 product m n = leftAdjunct (\a -> (m a, n a))
 
-projL :: Product c m n -> m
-projL = fst . counit
+outL :: Product c m n -> m
+outL = fst . counit
 
-projR :: Product c m n -> n
-projR = snd . counit
+outR :: Product c m n -> n
+outR = snd . counit
 
 type TerminalObject c = Cofree c ()
 
