@@ -120,10 +120,10 @@ type Coproduct c m n = Free c (Either m n)
 coproduct :: c r => (m -> r) -> (n -> r) -> Coproduct c m n -> r
 coproduct m n = rightAdjunct (either m n)
 
-inL :: c m => m -> Coproduct c m n
+inL :: m -> Coproduct c m n
 inL = unit . Left
 
-inR :: c n => n -> Coproduct c m n
+inR :: n -> Coproduct c m n
 inR = unit . Right
 
 type InitialObject c = Free c Void

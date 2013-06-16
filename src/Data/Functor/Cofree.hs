@@ -79,3 +79,22 @@ instance (ForallF c Identity, ForallF c (Cofree c), ForallF c (Compose (Cofree c
 
 convert :: (c (w a), Comonad w) => w a -> Cofree c a
 convert = leftAdjunct extract
+
+
+-- * Products
+
+type Product c m n = Cofree c (m, n)
+
+product :: c a => (a -> m) -> (a -> n) -> a -> Product c m n
+product m n = leftAdjunct (\a -> (m a, n a))
+
+projL :: Product c m n -> m
+projL = fst . counit
+
+projR :: Product c m n -> n
+projR = snd . counit
+
+type TerminalObject c = Cofree c ()
+
+terminal :: c a => a -> TerminalObject c
+terminal = leftAdjunct (const ())
