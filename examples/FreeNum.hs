@@ -1,11 +1,10 @@
-{-# LANGUAGE FlexibleInstances, TemplateHaskell, TypeFamilies, DeriveFunctor, DeriveFoldable, DeriveTraversable #-}
+{-# LANGUAGE TemplateHaskell, TypeFamilies, DeriveFunctor, DeriveFoldable, DeriveTraversable #-}
 module FreeNum where
 
 import Data.Functor.Free
-import Data.Algebra
 
 
-deriveInstance [t| () => Num (Free Num a) |]
+deriveInstances ''Num
 
 
 x, y :: Free Num String

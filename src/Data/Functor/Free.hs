@@ -10,6 +10,7 @@
   , DeriveFunctor
   , DeriveFoldable
   , DeriveTraversable
+  , TemplateHaskell
   #-}
 -----------------------------------------------------------------------------
 -- |
@@ -33,15 +34,34 @@ import Data.Constraint.Forall
 
 import Data.Functor.Identity
 import Data.Functor.Compose
-import Data.Foldable
+import Data.Foldable (Foldable(..))
 import Data.Traversable
 import Data.Void
 
 import Data.Algebra
+import Data.Algebra.TH
+import Language.Haskell.TH.Syntax
 
 -- | The free functor for constraint @c@.
 newtype Free c a = Free { runFree :: forall b. c b => (a -> b) -> b }
 
+deriveInstances :: Name -> Q [Dec]
+deriveInstances nm = concat <$> sequenceA
+  [ deriveSignature nm
+  , deriveInstanceWith_skipSignature freeHeader $ return []
+  , deriveInstanceWith_skipSignature liftAFreeHeader $ return []
+  ]
+  where
+    freeHeader = return $ ForallT [PlainTV a] [] 
+      (AppT c (AppT (AppT free c) (VarT a)))
+    liftAFreeHeader = return $ ForallT [PlainTV f,PlainTV a] [ClassP ''Applicative [VarT f]] 
+      (AppT c (AppT (AppT (AppT liftAFree c) (VarT f)) (VarT a)))
+    free = ConT ''Free
+    liftAFree = ConT ''LiftAFree
+    c = ConT nm
+    a = mkName "a"
+    f = mkName "f"
+  
 unit :: a -> Free c a
 unit a = Free $ \k -> k a
 
