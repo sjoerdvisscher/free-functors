@@ -94,12 +94,21 @@ counit = rightAdjunct id
 leftAdjunct :: (Free c a -> b) -> a -> b
 leftAdjunct f = f . unit
 
+-- | @transform f . transform g = transform (g . f)@
+transform :: (forall r. c r => (b -> r) -> a -> r) -> Free c a -> Free c b
+transform t (Free f) = Free (f . t)
+
+unfold :: (b -> Free c (Either b a)) -> b -> Free c a
+unfold g = go 
+  where 
+    go = transform (\f -> either (rightAdjunct f . go) f) . g
+
 instance Functor (Free c) where
-  fmap f (Free g) = Free (g . (. f))
+  fmap f = transform (. f)
 
 instance Applicative (Free c) where
   pure = unit
-  fs <*> as = Free $ \k -> runFree fs (\f -> runFree as (k . f))
+  fs <*> as = transform (\k f -> runFree as (k . f)) fs
 
 instance ForallF c (Free c) => Monad (Free c) where
   return = unit
@@ -129,6 +138,7 @@ convert = rightAdjunct pure
 
 convertClosed :: c r => Free c Void -> r
 convertClosed = rightAdjunct absurd
+
 
 -- * Coproducts
 
