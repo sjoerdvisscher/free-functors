@@ -14,7 +14,7 @@ import Data.Semigroup
 -- So it is a non-empty list.
 type NonEmptyList = Free Semigroup
 
--- These instances make NonEmptyList Foldable, Traversable and a Monad.
+-- These instances make NonEmptyList a Semigroup and Foldable and Traversable.
 deriveInstances ''Semigroup
 
 -- The next two instances make NonEmptyList a Comonad.
@@ -24,7 +24,7 @@ instance Semigroup (Identity a) where
 instance Semigroup (Compose NonEmptyList NonEmptyList a) where
   Compose l <> Compose r = Compose $ ((<> extract r) <$> l) <> r
 
-  
+
   
 fromList :: [a] -> NonEmptyList a
 fromList = foldr1 (<>) . map return

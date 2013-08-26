@@ -108,16 +108,16 @@ instance Functor (Free c) where
 
 instance Applicative (Free c) where
   pure = unit
-  fs <*> as = transform (\k f -> runFree as (k . f)) fs
+  fs <*> as = transform (\k f -> rightAdjunct (k . f) as) fs
 
-instance ForallF c (Free c) => Monad (Free c) where
+instance Monad (Free c) where
   return = unit
-  (>>=) = flip rightAdjunctF
+  as >>= f = transform (\k -> rightAdjunct k . f) as
 
-instance (ForallF c Identity, ForallF c (Free c), ForallF c (Compose (Free c) (Free c)))
+instance (ForallF c Identity, ForallF c (Compose (Free c) (Free c)))
   => Comonad (Free c) where
   extract = runIdentity . rightAdjunctF Identity
-  extend g = fmap g . getCompose . rightAdjunctF (Compose . return . return)
+  duplicate = getCompose . rightAdjunctF (Compose . unit . unit)
 
 instance c ~ Class f => Algebra f (Free c a) where
   algebra fa = Free $ \k -> evaluate (fmap (rightAdjunct k) fa)
