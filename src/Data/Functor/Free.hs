@@ -24,7 +24,30 @@
 -- A free functor is left adjoint to a forgetful functor.
 -- In this package the forgetful functor forgets class constraints.
 -----------------------------------------------------------------------------
-module Data.Functor.Free where
+module Data.Functor.Free (
+
+    Free(..)
+  , deriveInstances
+  , unit
+  , rightAdjunct
+  , rightAdjunctF
+  , rightAdjunctT
+  , counit
+  , leftAdjunct
+  , transform
+  , unfold
+  , convert
+  , convertClosed
+  
+  -- * Coproducts
+  , Coproduct
+  , coproduct
+  , inL
+  , inR
+  , InitialObject
+  , initial
+  
+  ) where
   
 import Control.Applicative
 import Control.Comonad
@@ -50,28 +73,6 @@ import Language.Haskell.TH.Syntax
 --   Monadic bind allows you to replace each of these variables with another sub-expression.
 newtype Free c a = Free { runFree :: forall b. c b => (a -> b) -> b }
 
--- | Derive the instances for the class @c@ of @`Free` c a@ and @`LiftAFree` c f a@.
---
--- For example: 
--- 
--- @deriveInstances ''Num@
-deriveInstances :: Name -> Q [Dec]
-deriveInstances nm = concat <$> sequenceA
-  [ deriveSignature nm
-  , deriveInstanceWith_skipSignature freeHeader $ return []
-  , deriveInstanceWith_skipSignature liftAFreeHeader $ return []
-  ]
-  where
-    freeHeader = return $ ForallT [PlainTV a] [] 
-      (AppT c (AppT (AppT free c) (VarT a)))
-    liftAFreeHeader = return $ ForallT [PlainTV f,PlainTV a] [ClassP ''Applicative [VarT f]] 
-      (AppT c (AppT (AppT (AppT liftAFree c) (VarT f)) (VarT a)))
-    free = ConT ''Free
-    liftAFree = ConT ''LiftAFree
-    c = ConT nm
-    a = mkName "a"
-    f = mkName "f"
-  
 -- | `unit` allows you to create `Free c` values, together with the operations from the class @c@.
 unit :: a -> Free c a
 unit a = Free $ \k -> k a
@@ -147,20 +148,7 @@ instance (ForallF c Identity, ForallF c (Compose (Free c) (Free c)))
 instance c ~ Class f => Algebra f (Free c a) where
   algebra fa = Free $ \k -> evaluate (fmap (rightAdjunct k) fa)
 
-newtype LiftAFree c f a = LiftAFree { getLiftAFree :: f (Free c a) }
 
-instance (Applicative f, c ~ Class s) => Algebra s (LiftAFree c f a) where
-  algebra = LiftAFree . fmap algebra . traverse getLiftAFree
-
-instance ForallT c (LiftAFree c) => Foldable (Free c) where
-  foldMap = foldMapDefault
-
-instance ForallT c (LiftAFree c) => Traversable (Free c) where
-  traverse f = getLiftAFree . rightAdjunctT (LiftAFree . fmap unit . f)
-
-
-
--- * Coproducts
 
 -- | Products of @Monoid@s are @Monoid@s themselves. But coproducts of @Monoid@s are not. 
 -- However, the free @Monoid@ applied to the coproduct /is/ a @Monoid@, and it is the coproduct in the category of @Monoid@s.
@@ -180,3 +168,56 @@ type InitialObject c = Free c Void
 
 initial :: c r => InitialObject c -> r
 initial = rightAdjunct absurd
+
+
+-- | Derive the instances of @`Free` c a@ for the class @c@, `Show`, `Foldable` and `Traversable`.
+--
+-- For example: 
+-- 
+-- @deriveInstances ''Num@
+deriveInstances :: Name -> Q [Dec]
+deriveInstances nm = concat <$> sequenceA
+  [ deriveSignature nm
+  , deriveInstanceWith_skipSignature freeHeader $ return []
+  , deriveInstanceWith_skipSignature liftAFreeHeader $ return []
+  , deriveInstanceWith_skipSignature showHelperHeader $ return []
+  ]
+  where
+    freeHeader = return $ ForallT [PlainTV a] [] 
+      (AppT c (AppT (AppT free c) (VarT a)))
+    liftAFreeHeader = return $ ForallT [PlainTV f,PlainTV a] [ClassP ''Applicative [VarT f]] 
+      (AppT c (AppT (AppT (AppT liftAFree c) (VarT f)) (VarT a)))
+    showHelperHeader = return $ ForallT [PlainTV a] [] 
+      (AppT c (AppT (AppT showHelper sig) (VarT a)))
+    free = ConT ''Free
+    liftAFree = ConT ''LiftAFree
+    showHelper = ConT ''ShowHelper
+    c = ConT nm
+    sig = ConT $ mkName (nameBase nm ++ "Signature")
+    a = mkName "a"
+    f = mkName "f"
+
+
+newtype LiftAFree c f a = LiftAFree { getLiftAFree :: f (Free c a) }
+
+instance (Applicative f, c ~ Class s) => Algebra s (LiftAFree c f a) where
+  algebra = LiftAFree . fmap algebra . traverse getLiftAFree
+
+instance ForallT c (LiftAFree c) => Foldable (Free c) where
+  foldMap = foldMapDefault
+
+instance ForallT c (LiftAFree c) => Traversable (Free c) where
+  traverse f = getLiftAFree . rightAdjunctT (LiftAFree . fmap unit . f)
+
+
+data ShowHelper f a = ShowUnit a | ShowRec (f (ShowHelper f a))
+
+instance Algebra f (ShowHelper f a) where
+  algebra = ShowRec
+
+instance (Show a, Show (f (ShowHelper f a))) => Show (ShowHelper f a) where
+  showsPrec p (ShowUnit a) = showParen (p > 10) $ showString "unit " . showsPrec 11 a
+  showsPrec p (ShowRec f) = showsPrec p f
+
+instance (Show a, Show (Signature c (ShowHelper (Signature c) a)), c (ShowHelper (Signature c) a)) => Show (Free c a) where 
+  show = show . rightAdjunct (ShowUnit :: a -> ShowHelper (Signature c) a)

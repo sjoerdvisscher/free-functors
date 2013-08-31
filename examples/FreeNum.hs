@@ -1,8 +1,7 @@
-{-# LANGUAGE TemplateHaskell, TypeFamilies, DeriveFunctor, DeriveFoldable, DeriveTraversable #-}
+{-# LANGUAGE TemplateHaskell, TypeFamilies, DeriveFunctor, DeriveFoldable, DeriveTraversable, FlexibleInstances #-}
 module FreeNum where
 
 import Data.Functor.Free
-
 
 deriveInstances ''Num
 
@@ -11,6 +10,7 @@ x, y :: Free Num String
 x = return "x"
 y = return "y"
 
+-- try showing expr
 expr :: Free Num String
 expr = 1 + x * (3 - y)
 

@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, TypeFamilies, DeriveFunctor, DeriveFoldable, DeriveTraversable #-}
+{-# LANGUAGE TemplateHaskell, TypeFamilies, DeriveFunctor, DeriveFoldable, DeriveTraversable, FlexibleInstances #-}
 module NonEmptyList where
 
 import Data.Functor.Free
@@ -14,7 +14,7 @@ import Data.Semigroup
 -- So it is a non-empty list.
 type NonEmptyList = Free Semigroup
 
--- These instances make NonEmptyList a Semigroup and Foldable and Traversable.
+-- These instances make NonEmptyList a Semigroup and Show-able, Foldable and Traversable.
 deriveInstances ''Semigroup
 
 -- The next two instances make NonEmptyList a Comonad.
@@ -34,5 +34,5 @@ toList = convert
 
 
 -- Test the comonad instance, returns [10,9,7,4].
-test :: [Int]
-test = toList $ extend (sum . toList) $ (pure 1 <> pure 2) <> (pure 3 <> pure 4)
+test :: NonEmptyList Int
+test = extend (sum . toList) $ (pure 1 <> pure 2) <> (pure 3 <> pure 4)
