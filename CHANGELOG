@@ -1,0 +1,8 @@
+CHANGELOG
+
+0.6.1 -> 0.6.1.1
+  - Added a changelog
+  
+0.6 -> 0.6.1
+  - Updated to comonad-4.0
+  - Added convert to Data.Functor.HCofree

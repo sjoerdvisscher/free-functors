@@ -24,6 +24,7 @@
 module Data.Functor.HCofree where
 
 import Control.Comonad
+import Control.Comonad.Trans.Class
 import Data.Foldable
 import Data.Traversable
 import Data.Functor.Identity
@@ -60,6 +61,9 @@ liftCofree = leftAdjunct id
 
 lowerCofree :: HCofree c f a -> f a
 lowerCofree = counit
+
+convert :: (c (t f), Functor (t f), Comonad f, ComonadTrans t) => t f a -> HCofree c f a
+convert = leftAdjunct lower
 
 coiter :: c Identity => (forall b. b -> f b) -> a -> HCofree c f a
 coiter f = leftAdjunct (f . runIdentity) . Identity
