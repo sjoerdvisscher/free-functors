@@ -66,6 +66,10 @@ convert = rightAdjunct lift
 iter :: c Identity => (forall b. f b -> b) -> HFree c f a -> a
 iter f = runIdentity . rightAdjunct (Identity . f)
 
+instance Applicative (HFree Monad f) where
+  pure = return
+  (<*>) = ap
+  
 -- | The free monad of a functor.
 instance Monad (HFree Monad f) where
   return a = HFree $ const (return a)

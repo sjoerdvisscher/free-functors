@@ -5,7 +5,7 @@
   , TypeSynonymInstances
   , LambdaCase
   #-}
-module FreeNum where
+module Parser where
 
 import Data.Functor.HFree
 
