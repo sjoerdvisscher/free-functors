@@ -1,16 +1,19 @@
 CHANGELOG
 
+0.6.3.1 -> 0.6.3.2
+  - Updated to constraints 0.4
+  
 0.6.2 -> 0.6.3.1
   - Updated to comonad 4.2
   - Updated to transformers 0.4.1.0
-  
+
 0.6.1.1 -> 0.6.2
   - Updated to template-haskell-2.9.0.0
   - Added instance Applicative (HFree Monad f)
-  
+
 0.6.1 -> 0.6.1.1
   - Added a changelog
-  
+
 0.6 -> 0.6.1
   - Updated to comonad-4.0
   - Added convert to Data.Functor.HCofree
