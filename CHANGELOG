@@ -1,9 +1,12 @@
 CHANGELOG
 
+0.6.4 -> 0.6.4.1
+  - Raise lower bounds of template-haskell
+
 0.6.3.3 -> 0.6.4
   - Updated to algebraic-classes 0.6
   - Updated to template-haskell-2.10.0.0
-  
+
 0.6.3.2 -> 0.6.3.3
   - Updated to void 0.7
 

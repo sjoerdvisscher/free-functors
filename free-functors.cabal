@@ -1,5 +1,5 @@
 name:                free-functors
-version:             0.6.4
+version:             0.6.4.1
 synopsis:            Provides free functors that are adjoint to functors that forget class constraints.
 description:         A free functor is a left adjoint to a forgetful functor. It used to be the case
                      that the only category that was easy to work with in Haskell was Hask itself, so
@@ -41,13 +41,14 @@ Library
     Haskell2010
 
   build-depends:
-    base >= 4.4 && < 5,
+    base == 4.8.*,
+    template-haskell == 2.10.0.*,
     constraints >= 0.3.2 && < 0.5,
     transformers >= 0.2.0.0 && < 0.5,
     comonad >= 4.0 && < 4.3,
     void >= 0.4 && < 0.8,
-    algebraic-classes >= 0.5 && < 0.7,
-    template-haskell >= 2.8.0.0 && < 2.10.1
+    algebraic-classes == 0.6.*
+
 
 source-repository head
   type:     git
