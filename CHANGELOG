@@ -1,8 +1,15 @@
 CHANGELOG
 
+0.6.3.3 -> 0.6.4
+  - Updated to algebraic-classes 0.6
+  - Updated to template-haskell-2.10.0.0
+  
+0.6.3.2 -> 0.6.3.3
+  - Updated to void 0.7
+
 0.6.3.1 -> 0.6.3.2
   - Updated to constraints 0.4
-  
+
 0.6.2 -> 0.6.3.1
   - Updated to comonad 4.2
   - Updated to transformers 0.4.1.0

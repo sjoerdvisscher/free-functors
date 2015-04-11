@@ -1,5 +1,5 @@
-{-# LANGUAGE 
-    FlexibleInstances 
+{-# LANGUAGE
+    FlexibleInstances
   , TypeOperators
   , GADTs
   , TypeSynonymInstances
@@ -18,7 +18,7 @@ data ParserF c a where
 
 type Parser c = HFree Alternative (ParserF c)
 
-symbol :: c -> Parser (ParserF c) c
+symbol :: c -> Parser c c
 symbol = liftFree . Symbol
 
 

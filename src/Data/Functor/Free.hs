@@ -2,7 +2,7 @@
     ConstraintKinds
   , GADTs
   , RankNTypes
-  , TypeOperators  
+  , TypeOperators
   , FlexibleInstances
   , MultiParamTypeClasses
   , UndecidableInstances
@@ -38,7 +38,7 @@ module Data.Functor.Free (
   , unfold
   , convert
   , convertClosed
-  
+
   -- * Coproducts
   , Coproduct
   , coproduct
@@ -46,9 +46,9 @@ module Data.Functor.Free (
   , inR
   , InitialObject
   , initial
-  
+
   ) where
-  
+
 import Control.Applicative
 import Control.Comonad
 import Data.Function
@@ -66,9 +66,9 @@ import Data.Algebra
 import Data.Algebra.TH
 import Language.Haskell.TH.Syntax
 
--- | The free functor for class @c@. 
+-- | The free functor for class @c@.
 --
---   @Free c a@ is basically an expression tree with operations from class @c@ 
+--   @Free c a@ is basically an expression tree with operations from class @c@
 --   and variables/placeholders of type @a@, created with `unit`.
 --   Monadic bind allows you to replace each of these variables with another sub-expression.
 newtype Free c a = Free { runFree :: forall b. c b => (a -> b) -> b }
@@ -150,7 +150,7 @@ instance c ~ Class f => Algebra f (Free c a) where
 
 
 
--- | Products of @Monoid@s are @Monoid@s themselves. But coproducts of @Monoid@s are not. 
+-- | Products of @Monoid@s are @Monoid@s themselves. But coproducts of @Monoid@s are not.
 -- However, the free @Monoid@ applied to the coproduct /is/ a @Monoid@, and it is the coproduct in the category of @Monoid@s.
 -- This is also called the free product, and generalizes to any algebraic class.
 type Coproduct c m n = Free c (Either m n)
@@ -172,8 +172,8 @@ initial = rightAdjunct absurd
 
 -- | Derive the instances of @`Free` c a@ for the class @c@, `Show`, `Foldable` and `Traversable`.
 --
--- For example: 
--- 
+-- For example:
+--
 -- @deriveInstances ''Num@
 deriveInstances :: Name -> Q [Dec]
 deriveInstances nm = concat <$> sequenceA
@@ -183,11 +183,11 @@ deriveInstances nm = concat <$> sequenceA
   , deriveInstanceWith_skipSignature showHelperHeader $ return []
   ]
   where
-    freeHeader = return $ ForallT [PlainTV a] [] 
+    freeHeader = return $ ForallT [PlainTV a] []
       (AppT c (AppT (AppT free c) (VarT a)))
-    liftAFreeHeader = return $ ForallT [PlainTV f,PlainTV a] [ClassP ''Applicative [VarT f]] 
+    liftAFreeHeader = return $ ForallT [PlainTV f,PlainTV a] [AppT (ConT ''Applicative) (VarT f)] 
       (AppT c (AppT (AppT (AppT liftAFree c) (VarT f)) (VarT a)))
-    showHelperHeader = return $ ForallT [PlainTV a] [] 
+    showHelperHeader = return $ ForallT [PlainTV a] []
       (AppT c (AppT (AppT showHelper sig) (VarT a)))
     free = ConT ''Free
     liftAFree = ConT ''LiftAFree
@@ -219,5 +219,5 @@ instance (Show a, Show (f (ShowHelper f a))) => Show (ShowHelper f a) where
   showsPrec p (ShowUnit a) = showParen (p > 10) $ showString "unit " . showsPrec 11 a
   showsPrec p (ShowRec f) = showsPrec p f
 
-instance (Show a, Show (Signature c (ShowHelper (Signature c) a)), c (ShowHelper (Signature c) a)) => Show (Free c a) where 
+instance (Show a, Show (Signature c (ShowHelper (Signature c) a)), c (ShowHelper (Signature c) a)) => Show (Free c a) where
   show = show . rightAdjunct (ShowUnit :: a -> ShowHelper (Signature c) a)
