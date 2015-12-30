@@ -11,6 +11,7 @@
   , DeriveFoldable
   , DeriveTraversable
   , TemplateHaskell
+  , PolyKinds
   #-}
 -----------------------------------------------------------------------------
 -- |
@@ -185,7 +186,7 @@ deriveInstances nm = concat <$> sequenceA
   where
     freeHeader = return $ ForallT [PlainTV a] []
       (AppT c (AppT (AppT free c) (VarT a)))
-    liftAFreeHeader = return $ ForallT [PlainTV f,PlainTV a] [AppT (ConT ''Applicative) (VarT f)] 
+    liftAFreeHeader = return $ ForallT [PlainTV f,PlainTV a] [AppT (ConT ''Applicative) (VarT f)]
       (AppT c (AppT (AppT (AppT liftAFree c) (VarT f)) (VarT a)))
     showHelperHeader = return $ ForallT [PlainTV a] []
       (AppT c (AppT (AppT showHelper sig) (VarT a)))
