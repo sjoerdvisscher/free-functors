@@ -49,7 +49,7 @@ leftAdjunct :: (HFree c f :~> g) -> f :~> g
 leftAdjunct f = f . unit
 
 instance Functor (HFree c f) where
-  fmap f (HFree g) = HFree (fmap f . g)
+  fmap f h = HFree (\s -> fmap f (runHFree h s))
 
 hfmap :: (f :~> g) -> HFree c f :~> HFree c g
 hfmap f (HFree g) = HFree $ \k -> g (k . f)
