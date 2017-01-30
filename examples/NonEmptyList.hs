@@ -1,15 +1,12 @@
-{-# LANGUAGE TemplateHaskell, TypeFamilies, DeriveFunctor, DeriveFoldable, DeriveTraversable, FlexibleInstances #-}
+{-# LANGUAGE TemplateHaskell, TypeFamilies, DeriveFunctor, DeriveFoldable, DeriveTraversable, FlexibleInstances, UndecidableInstances #-}
 module NonEmptyList where
 
 import Data.Functor.Free
 
-import Control.Applicative
 import Control.Comonad
-import Data.Functor.Identity
-import Data.Functor.Compose
 
 import Data.Semigroup
-  
+
 -- A free semigroup allows you to create singletons and append them.
 -- So it is a non-empty list.
 type NonEmptyList = Free Semigroup
@@ -18,21 +15,15 @@ type NonEmptyList = Free Semigroup
 deriveInstances ''Semigroup
 
 -- The next two instances make NonEmptyList a Comonad.
-instance Semigroup (Identity a) where
+instance Semigroup (Extract a) where
   a <> _ = a
 
-instance Semigroup (Compose NonEmptyList NonEmptyList a) where
-  Compose l <> Compose r = Compose $ ((<> extract r) <$> l) <> r
+instance Semigroup (Duplicate NonEmptyList a) where
+  Duplicate l <> Duplicate r = Duplicate $ ((<> extract r) <$> l) <> r
 
-
-  
 fromList :: [a] -> NonEmptyList a
-fromList = foldr1 (<>) . map return
-
-toList :: NonEmptyList a -> [a]
-toList = convert
-
+fromList = foldr1 (<>) . map pure
 
 -- Test the comonad instance, returns [10,9,7,4].
 test :: NonEmptyList Int
-test = extend (sum . toList) $ (pure 1 <> pure 2) <> (pure 3 <> pure 4)
+test = extend sum $ (pure 1 <> pure 2) <> (pure 3 <> (pure 4 <> pure 5))

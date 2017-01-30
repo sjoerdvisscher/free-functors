@@ -39,6 +39,8 @@ module Data.Functor.Free (
   , unfold
   , convert
   , convertClosed
+  , Extract(..)
+  , Duplicate(..)
 
   -- * Coproducts
   , Coproduct
@@ -50,15 +52,12 @@ module Data.Functor.Free (
 
   ) where
 
-import Control.Applicative
 import Control.Comonad
 import Data.Function
 
 import Data.Constraint hiding (Class)
 import Data.Constraint.Forall
 
-import Data.Functor.Identity
-import Data.Functor.Compose
 import Data.Foldable (Foldable(..))
 import Data.Traversable
 import Data.Void
@@ -141,10 +140,12 @@ instance Monad (Free c) where
   return = unit
   as >>= f = transform (\k -> rightAdjunct k . f) as
 
-instance (ForallF c Identity, ForallF c (Compose (Free c) (Free c)))
+newtype Extract a = Extract { getExtract :: a }
+newtype Duplicate f a = Duplicate { getDuplicate :: f (f a) }
+instance (ForallF c Extract, ForallF c (Duplicate (Free c)))
   => Comonad (Free c) where
-  extract = runIdentity . rightAdjunctF Identity
-  duplicate = getCompose . rightAdjunctF (Compose . unit . unit)
+  extract = getExtract . rightAdjunctF Extract
+  duplicate = getDuplicate . rightAdjunctF (Duplicate . unit . unit)
 
 instance c ~ Class f => Algebra f (Free c a) where
   algebra fa = Free $ \k -> evaluate (fmap (rightAdjunct k) fa)
@@ -221,4 +222,4 @@ instance (Show a, Show (f (ShowHelper f a))) => Show (ShowHelper f a) where
   showsPrec p (ShowRec f) = showsPrec p f
 
 instance (Show a, Show (Signature c (ShowHelper (Signature c) a)), c (ShowHelper (Signature c) a)) => Show (Free c a) where
-  show = show . rightAdjunct (ShowUnit :: a -> ShowHelper (Signature c) a)
+  showsPrec p = showsPrec p . rightAdjunct (ShowUnit :: a -> ShowHelper (Signature c) a)
