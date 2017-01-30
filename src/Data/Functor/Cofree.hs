@@ -1,7 +1,7 @@
 {-# LANGUAGE
     ConstraintKinds
   , RankNTypes
-  , TypeOperators  
+  , TypeOperators
   , FlexibleInstances
   , GADTs
   , MultiParamTypeClasses
@@ -21,10 +21,9 @@
 -- In this package the forgetful functor forgets class constraints.
 -----------------------------------------------------------------------------
 module Data.Functor.Cofree where
-  
+
 import Control.Monad
 import Control.Comonad
-import Control.Applicative
 
 import Data.Constraint
 import Data.Constraint.Forall
@@ -36,6 +35,7 @@ import Data.Functor.Compose
 -- | The cofree functor for constraint @c@.
 data Cofree c b where
   Cofree :: c a => (a -> b) -> a -> Cofree c b
+
 
 counit :: Cofree c b -> b
 counit (Cofree k a) = k a
@@ -63,16 +63,16 @@ rightAdjunct f = counit . f
 instance Functor (Cofree c) where
   fmap f (Cofree k a) = Cofree (f . k) a
 
-instance ForallF c (Cofree c) => Comonad (Cofree c) where
+instance Comonad (Cofree c) where
   extract = counit
-  extend = leftAdjunctF
+  duplicate (Cofree k a) = Cofree (leftAdjunct k) a
 
-instance (ForallF c Identity, ForallF c (Cofree c), ForallF c (Compose (Cofree c) (Cofree c)))
+instance (ForallF c Identity, ForallF c (Compose (Cofree c) (Cofree c)))
   => Applicative (Cofree c) where
   pure = leftAdjunctF runIdentity . Identity
   (<*>) = ap
 
-instance (ForallF c Identity, ForallF c (Cofree c), ForallF c (Compose (Cofree c) (Cofree c)))
+instance (ForallF c Identity, ForallF c (Compose (Cofree c) (Cofree c)))
   => Monad (Cofree c) where
   return = pure
   m >>= g = leftAdjunctF (extract . extract . getCompose) (Compose $ fmap g m)
