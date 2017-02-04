@@ -46,5 +46,8 @@ headS = extract
 tailS :: Stream a -> Stream a
 tailS = act ()
 
+zipWithS :: (a -> b -> c) -> Stream a -> Stream b -> Stream c
+zipWithS f as bs = f <$> as <*> bs
+
 fromStream :: Stream a -> [a]
 fromStream = map headS . iterate tailS

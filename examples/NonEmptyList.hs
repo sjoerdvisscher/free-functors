@@ -24,6 +24,6 @@ instance Semigroup (Duplicate NonEmptyList a) where
 fromList :: [a] -> NonEmptyList a
 fromList = foldr1 (<>) . map pure
 
--- Test the comonad instance, returns [10,9,7,4].
+-- Test the comonad and foldable instances, returns [10,9,7,4].
 test :: NonEmptyList Int
 test = extend sum $ (pure 1 <> pure 2) <> (pure 3 <> (pure 4 <> pure 5))
