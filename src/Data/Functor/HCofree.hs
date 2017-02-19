@@ -6,6 +6,7 @@
   , FlexibleContexts
   , FlexibleInstances
   , ScopedTypeVariables
+  , UndecidableInstances
   #-}
 -----------------------------------------------------------------------------
 -- |
@@ -89,14 +90,14 @@ instance SuperClass1 Foldable c => Foldable (HCofree c g) where
       h :: (c f, Monoid m) => (c f :- Foldable f) -> (a -> m) -> f a -> m
       h (Sub Dict) = foldMap
 
-instance (SuperClass1 Functor c, SuperClass1 Foldable c, SuperClass1 Traversable c) => Traversable (HCofree c g) where
+instance SuperClass1 Traversable c => Traversable (HCofree c g) where
   traverse f (HCofree k a) = HCofree k <$> h scls1 f a
     where
       h :: (c t, Applicative f) => (c t :- Traversable t) -> (a -> f b) -> t a -> f (t b)
       h (Sub Dict) = traverse
 
 -- | The cofree comonad of a functor.
-instance (SuperClass1 Functor c, SuperClass1 Comonad c) => Comonad (HCofree c g) where
+instance SuperClass1 Comonad c => Comonad (HCofree c g) where
   extract (HCofree _ a) = h scls1 a
     where
       h :: c f => (c f :- Comonad f) -> f a -> a

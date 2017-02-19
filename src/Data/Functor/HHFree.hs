@@ -90,7 +90,7 @@ instance SuperClass1 Category c => Category (HHFree c f) where
       h :: c g => (c g :- Category g) -> g b d -> g a b -> g a d
       h (Sub Dict) = (.)
 
-instance (SuperClass1 Category c, SuperClass1 Arrow c) => Arrow (HHFree c f) where
+instance SuperClass1 Arrow c => Arrow (HHFree c f) where
   arr f = HHFree $ const (h scls1 f)
     where
       h :: c g => (c g :- Arrow g) -> (a -> b) -> g a b
@@ -100,31 +100,31 @@ instance (SuperClass1 Category c, SuperClass1 Arrow c) => Arrow (HHFree c f) whe
       h :: c g => (c g :- Arrow g) -> g a b -> g d e -> g (a, d) (b, e)
       h (Sub Dict) = (***)
 
-instance (SuperClass1 Category c, SuperClass1 Arrow c, SuperClass1 ArrowZero c) => ArrowZero (HHFree c f) where
+instance SuperClass1 ArrowZero c => ArrowZero (HHFree c f) where
   zeroArrow = HHFree $ const (h scls1)
     where
       h :: c g => (c g :- ArrowZero g) -> g a b
       h (Sub Dict) = zeroArrow
 
-instance (SuperClass1 Category c, SuperClass1 Arrow c, SuperClass1 ArrowZero c, SuperClass1 ArrowPlus c) => ArrowPlus (HHFree c f) where
+instance SuperClass1 ArrowPlus c => ArrowPlus (HHFree c f) where
   HHFree f <+> HHFree g = HHFree $ \k -> h scls1 (f k) (g k)
     where
       h :: c g => (c g :- ArrowPlus g) -> g a b -> g a b -> g a b
       h (Sub Dict) = (<+>)
 
-instance (SuperClass1 Category c, SuperClass1 Arrow c, SuperClass1 ArrowChoice c) => ArrowChoice (HHFree c f) where
+instance SuperClass1 ArrowChoice c => ArrowChoice (HHFree c f) where
   HHFree f +++ HHFree g = HHFree $ \k -> h scls1 (f k) (g k)
     where
       h :: c g => (c g :- ArrowChoice g) -> g a b -> g d e -> g (Either a d) (Either b e)
       h (Sub Dict) = (+++)
 
-instance (SuperClass1 Category c, SuperClass1 Arrow c, SuperClass1 ArrowApply c) => ArrowApply (HHFree c f) where
+instance SuperClass1 ArrowApply c => ArrowApply (HHFree c f) where
   app = HHFree $ h scls1
     where
       h :: c g => (c g :- ArrowApply g) -> (f :~~> g) -> g (HHFree c f a b, a) b
       h (Sub Dict) k = app . arr (first (rightAdjunct k))
 
-instance (SuperClass1 Category c, SuperClass1 Arrow c, SuperClass1 ArrowLoop c) => ArrowLoop (HHFree c f) where
+instance SuperClass1 ArrowLoop c => ArrowLoop (HHFree c f) where
   loop (HHFree f) = HHFree $ \k -> h scls1 (f k)
     where
       h :: c g => (c g :- ArrowLoop g) -> g (b, d) (a, d) -> g b a
@@ -136,7 +136,7 @@ instance SuperClass1 Bifunctor c => Bifunctor (HHFree c f) where
       h :: c g => (c g :- Bifunctor g) -> (a -> b) -> (e -> d) -> g a e -> g b d
       h (Sub Dict) = bimap
 
-instance (SuperClass1 Bifunctor c, SuperClass1 Biapplicative c) => Biapplicative (HHFree c f) where
+instance SuperClass1 Biapplicative c => Biapplicative (HHFree c f) where
   bipure a b = HHFree $ const (h scls1 a b)
     where
       h :: c g => (c g :- Biapplicative g) -> a -> b -> g a b
@@ -152,19 +152,19 @@ instance SuperClass1 Profunctor c => Profunctor (HHFree c f) where
       h :: c g => (c g :- Profunctor g) -> (b -> a) -> (e -> d) -> g a e -> g b d
       h (Sub Dict) = dimap
 
-instance (SuperClass1 Profunctor c, SuperClass1 Strong c) => Strong (HHFree c f) where
+instance SuperClass1 Strong c => Strong (HHFree c f) where
   first' (HHFree f) = HHFree $ \k -> h scls1 (f k)
     where
       h :: c g => (c g :- Strong g) -> g a b -> g (a, d) (b, d)
       h (Sub Dict) = first'
 
-instance (SuperClass1 Profunctor c, SuperClass1 Choice c) => Choice (HHFree c f) where
+instance SuperClass1 Choice c => Choice (HHFree c f) where
   left' (HHFree f) = HHFree $ \k -> h scls1 (f k)
     where
       h :: c g => (c g :- Choice g) -> g a b -> g (Either a d) (Either b d)
       h (Sub Dict) = left'
 
-instance (SuperClass1 Profunctor c, SuperClass1 Closed c) => Closed (HHFree c f) where
+instance SuperClass1 Closed c => Closed (HHFree c f) where
   closed (HHFree f) = HHFree $ \k -> h scls1 (f k)
     where
       h :: c g => (c g :- Closed g) -> g a b -> g (d -> a) (d -> b)

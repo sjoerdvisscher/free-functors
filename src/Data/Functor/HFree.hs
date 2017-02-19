@@ -4,6 +4,7 @@
   , ConstraintKinds
   , FlexibleContexts
   , ScopedTypeVariables
+  , UndecidableInstances
   #-}
 -----------------------------------------------------------------------------
 -- |
@@ -85,7 +86,7 @@ instance SuperClass1 Functor c => Functor (HFree c f) where
       h :: c g => (c g :- Functor g) -> (a -> b) -> g a -> g b
       h (Sub Dict) = fmap
 
-instance (SuperClass1 Functor c, SuperClass1 Applicative c) => Applicative (HFree c f) where
+instance SuperClass1 Applicative c => Applicative (HFree c f) where
   pure a = HFree $ const (h scls1 a)
     where
       h :: c g => (c g :- Applicative g) -> a -> g a
@@ -95,7 +96,7 @@ instance (SuperClass1 Functor c, SuperClass1 Applicative c) => Applicative (HFre
       h :: c g => (c g :- Applicative g) -> g (a -> b) -> g a -> g b
       h (Sub Dict) = (<*>)
 
-instance (SuperClass1 Functor c, SuperClass1 Applicative c, SuperClass1 Alternative c) => Alternative (HFree c f) where
+instance SuperClass1 Alternative c => Alternative (HFree c f) where
   empty = HFree $ const (h scls1)
     where
       h :: c g => (c g :- Alternative g) -> g a
@@ -106,7 +107,7 @@ instance (SuperClass1 Functor c, SuperClass1 Applicative c, SuperClass1 Alternat
       h (Sub Dict) = (<|>)
 
 -- | The free monad of a functor.
-instance (SuperClass1 Functor c, SuperClass1 Applicative c, SuperClass1 Monad c) => Monad (HFree c f) where
+instance SuperClass1 Monad c => Monad (HFree c f) where
   return = pure
   HFree f >>= g = HFree $ \k -> h scls1 (f k) (rightAdjunct k . g)
     where
@@ -122,7 +123,7 @@ instance SuperClass1 Contravariant c => Contravariant (HFree c f) where
       h :: c g => (c g :- Contravariant g) -> (b -> a) -> g a -> g b
       h (Sub Dict) = contramap
 
-instance (SuperClass1 Contravariant c, SuperClass1 Divisible c) => Divisible (HFree c f) where
+instance SuperClass1 Divisible c => Divisible (HFree c f) where
   divide f (HFree a) (HFree b) = HFree $ \k -> h scls1 f (a k) (b k)
     where
       h :: c g => (c g :- Divisible g) -> (a -> (b, d)) -> g b -> g d -> g a
@@ -132,7 +133,7 @@ instance (SuperClass1 Contravariant c, SuperClass1 Divisible c) => Divisible (HF
       h :: c g => (c g :- Divisible g) -> g a
       h (Sub Dict) = conquer
 
-instance (SuperClass1 Contravariant c, SuperClass1 Divisible c, SuperClass1 Decidable c) => Decidable (HFree c f) where
+instance SuperClass1 Decidable c => Decidable (HFree c f) where
   choose f (HFree a) (HFree b) = HFree $ \k -> h scls1 f (a k) (b k)
     where
       h :: c g => (c g :- Decidable g) -> (a -> Either b d) -> g b -> g d -> g a
