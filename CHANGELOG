@@ -1,8 +1,11 @@
 CHANGELOG
 
+0.7.1 -> 0.7.2
+  - Fixed Traversable instance of `Free c`
+
 0.7 -> 0.7.1
   - Rewritten SuperClass1
-  
+
 0.6.5 -> 0.7
   - Allow contravariant uses of HFree
   - Added HHFree for free profunctors/categories/arrows
