@@ -18,7 +18,7 @@
 -- A free functor is left adjoint to a forgetful functor.
 -- In this package the forgetful functor forgets class constraints.
 --
--- Compared to @Data.Functor.HHFree@ we have 2 two parameters.
+-- Compared to @Data.Functor.HFree@ we have 2 two parameters.
 -----------------------------------------------------------------------------
 module Data.Functor.HHFree where
 
