@@ -1,6 +1,7 @@
 {-# LANGUAGE
     RankNTypes
   , TypeOperators
+  , MonoLocalBinds
   , ConstraintKinds
   , FlexibleContexts
   , ScopedTypeVariables

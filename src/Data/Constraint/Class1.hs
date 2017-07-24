@@ -46,10 +46,10 @@ class HasSuperClasses (c :: k -> Constraint) where
   type SuperClasses c :: [k -> Constraint]
   type SuperClasses c = '[c]
   superClasses :: c x :- FoldConstraints (SuperClasses c) x
-  default superClasses :: c x :- FoldConstraints '[c] x
+  default superClasses :: (SuperClasses c ~ '[c]) => c x :- FoldConstraints (SuperClasses c) x
   superClasses = Sub Dict
   containsSelf :: FoldConstraints (SuperClasses c) x :- c x
-  default containsSelf :: FoldConstraints '[c] x :- c x
+  default containsSelf :: (SuperClasses c ~ '[c]) => FoldConstraints (SuperClasses c) x :- c x
   containsSelf = Sub Dict
 
 instance HasSuperClasses Functor
