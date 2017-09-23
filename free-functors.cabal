@@ -1,5 +1,5 @@
 name:                free-functors
-version:             0.8
+version:             0.8.1
 synopsis:            Free functors, adjoint to functors that forget class constraints.
 description:         A free functor is a left adjoint to a forgetful functor. It used to be the case
                      that the only category that was easy to work with in Haskell was Hask itself, so
@@ -35,6 +35,7 @@ Library
     Data.Constraint.Class1,
     Data.Functor.Cofree,
     Data.Functor.Free,
+    Data.Functor.Free.TH,
     Data.Functor.HCofree,
     Data.Functor.HFree,
     Data.Functor.HHFree

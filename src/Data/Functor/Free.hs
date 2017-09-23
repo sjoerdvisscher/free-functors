@@ -12,6 +12,7 @@
   , DeriveTraversable
   , TemplateHaskell
   , PolyKinds
+  , TypeFamilies
   #-}
 -----------------------------------------------------------------------------
 -- |
@@ -53,17 +54,21 @@ module Data.Functor.Free (
 
 import Control.Comonad
 import Data.Function
+import Data.Semigroup
 
 import Data.Constraint hiding (Class)
 import Data.Constraint.Forall
+import Data.Constraint.Class1
 
 import Data.Foldable (Foldable(..))
 import Data.Traversable
 import Data.Void
 
 import Data.Algebra
-import Data.Algebra.TH
 import Language.Haskell.TH.Syntax
+
+import Data.Functor.Free.TH
+
 
 -- | The free functor for class @c@.
 --
@@ -148,8 +153,12 @@ instance (ForallF c Extract, ForallF c (Duplicate (Free c)))
   extract = getExtract . rightAdjunctF Extract
   duplicate = getDuplicate . rightAdjunctF (Duplicate . unit . unit)
 
-instance c ~ Class f => Algebra f (Free c a) where
-  algebra fa = Free $ \k -> evaluate (fmap (rightAdjunct k) fa)
+instance SuperClass1 (Class f) c => Algebra f (Free c a) where
+  algebra fa = Free $ \k -> h scls1 (fmap (rightAdjunct k) fa)
+    where
+      h :: c b => (c b :- Class f b) -> f b -> b
+      h (Sub Dict) = evaluate
+      
 
 
 
@@ -173,38 +182,10 @@ initial :: c r => InitialObject c -> r
 initial = rightAdjunct absurd
 
 
--- | Derive the instances of @`Free` c a@ for the class @c@, `Show`, `Foldable` and `Traversable`.
---
--- For example:
---
--- @deriveInstances ''Num@
-deriveInstances :: Name -> Q [Dec]
-deriveInstances nm = concat <$> sequenceA
-  [ deriveSignature nm
-  , deriveInstanceWith_skipSignature freeHeader $ return []
-  , deriveInstanceWith_skipSignature liftAFreeHeader $ return []
-  , deriveInstanceWith_skipSignature showHelperHeader $ return []
-  , [d|instance ForallLifted $(return c) where dictLifted = Dict|]
-  ]
-  where
-    freeHeader = return $ ForallT [PlainTV a] []
-      (AppT c (AppT (AppT free c) (VarT a)))
-    liftAFreeHeader = return $ ForallT [PlainTV f,PlainTV a] [AppT (ConT ''Applicative) (VarT f)]
-      (AppT c (AppT (AppT (AppT liftAFree c) (VarT f)) (VarT a)))
-    showHelperHeader = return $ ForallT [PlainTV a] []
-      (AppT c (AppT (AppT showHelper sig) (VarT a)))
-    free = ConT ''Free
-    liftAFree = ConT ''LiftAFree
-    showHelper = ConT ''ShowHelper
-    c = ConT nm
-    sig = ConT $ mkName (nameBase nm ++ "Signature")
-    a = mkName "a"
-    f = mkName "f"
-
 
 newtype LiftAFree c f a = LiftAFree { getLiftAFree :: f (Free c a) }
 
-instance (Applicative f, c ~ Class s) => Algebra s (LiftAFree c f a) where
+instance (Applicative f, SuperClass1 (Class s) c) => Algebra s (LiftAFree c f a) where
   algebra = LiftAFree . fmap algebra . traverse getLiftAFree
 
 instance ForallLifted c => Foldable (Free c) where
@@ -225,3 +206,15 @@ instance (Show a, Show (f (ShowHelper f a))) => Show (ShowHelper f a) where
 
 instance (Show a, Show (Signature c (ShowHelper (Signature c) a)), c (ShowHelper (Signature c) a)) => Show (Free c a) where
   showsPrec p = showsPrec p . rightAdjunct (ShowUnit :: a -> ShowHelper (Signature c) a)
+  
+-- | Derive the instances of @`Free` c a@ for the class @c@, `Show`, `Foldable` and `Traversable`.
+--
+-- For example:
+--
+-- @deriveInstances ''Num@
+deriveInstances :: Name -> Q [Dec]
+deriveInstances = deriveInstances' ''ForallLifted 'dictLifted ''Free ''LiftAFree ''ShowHelper
+
+deriveInstances' ''ForallLifted 'dictLifted ''Free ''LiftAFree ''ShowHelper ''Num
+deriveInstances' ''ForallLifted 'dictLifted ''Free ''LiftAFree ''ShowHelper ''Semigroup
+deriveInstances' ''ForallLifted 'dictLifted ''Free ''LiftAFree ''ShowHelper ''Monoid

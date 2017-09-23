@@ -12,7 +12,8 @@ import Data.Semigroup
 type NonEmptyList = Free Semigroup
 
 -- These instances make NonEmptyList a Semigroup and Show-able, Foldable and Traversable.
-deriveInstances ''Semigroup
+-- This is what you would normally do with your own class, for Semigroup this is already done for you.
+-- deriveInstances ''Semigroup
 
 -- The next two instances make NonEmptyList a Comonad.
 instance Semigroup (Extract a) where

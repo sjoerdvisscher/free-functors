@@ -35,6 +35,7 @@ import Data.Biapplicative
 import Data.Functor.Contravariant
 import Data.Functor.Contravariant.Divisible
 import Data.Profunctor
+import Data.Semigroup
 
 -- | Proof that @b@ is a superclass of @h@, i.e. @h x@ entails @b x@.
 scls1 :: forall b h x. SuperClass1 b h => h x :- b x
@@ -51,6 +52,44 @@ class HasSuperClasses (c :: k -> Constraint) where
   containsSelf :: FoldConstraints (SuperClasses c) x :- c x
   default containsSelf :: (SuperClasses c ~ '[c]) => FoldConstraints (SuperClasses c) x :- c x
   containsSelf = Sub Dict
+
+
+instance HasSuperClasses Num
+instance HasSuperClasses Eq
+instance HasSuperClasses Enum
+instance HasSuperClasses Bounded
+instance HasSuperClasses Show
+instance HasSuperClasses Read
+instance HasSuperClasses Ord where
+  type SuperClasses Ord = Ord ': SuperClasses Eq
+  superClasses = Sub Dict
+  containsSelf = Sub Dict
+instance HasSuperClasses Real where
+  type SuperClasses Real = Real ': SuperClasses Num ++ SuperClasses Ord
+  superClasses = Sub Dict
+  containsSelf = Sub Dict
+instance HasSuperClasses Fractional where
+  type SuperClasses Fractional = Fractional ': SuperClasses Num
+  superClasses = Sub Dict
+  containsSelf = Sub Dict
+instance HasSuperClasses Integral where
+  type SuperClasses Integral = Integral ': SuperClasses Real ++ SuperClasses Enum 
+  superClasses = Sub Dict
+  containsSelf = Sub Dict
+instance HasSuperClasses RealFrac where
+  type SuperClasses RealFrac = RealFrac ': SuperClasses Real ++ SuperClasses Fractional 
+  superClasses = Sub Dict
+  containsSelf = Sub Dict
+instance HasSuperClasses Floating where
+  type SuperClasses Floating = Floating ': SuperClasses Fractional 
+  superClasses = Sub Dict
+  containsSelf = Sub Dict
+instance HasSuperClasses RealFloat where
+  type SuperClasses RealFloat = RealFloat ': SuperClasses RealFrac ++ SuperClasses Floating 
+  superClasses = Sub Dict
+  containsSelf = Sub Dict
+instance HasSuperClasses Semigroup
+instance HasSuperClasses Monoid
 
 instance HasSuperClasses Functor
 instance HasSuperClasses Applicative where

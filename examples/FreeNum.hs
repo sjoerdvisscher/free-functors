@@ -3,7 +3,8 @@ module FreeNum where
 
 import Data.Functor.Free
 
-deriveInstances ''Num
+-- This is what you would normally do with your own class, for Num this is already done for you.
+-- deriveInstances ''Num
 
 
 x, y :: Free Num String
