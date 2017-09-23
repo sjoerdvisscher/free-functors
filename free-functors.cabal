@@ -38,6 +38,7 @@ Library
     Data.Functor.Free.TH,
     Data.Functor.HCofree,
     Data.Functor.HFree,
+    Data.Functor.HHCofree,
     Data.Functor.HHFree
 
   default-language:
