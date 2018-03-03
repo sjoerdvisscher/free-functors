@@ -13,6 +13,7 @@
   , TemplateHaskell
   , PolyKinds
   , TypeFamilies
+  , DataKinds
   #-}
 -----------------------------------------------------------------------------
 -- |
@@ -49,6 +50,9 @@ module Data.Functor.Free (
   , inR
   , InitialObject
   , initial
+  
+  -- * Internal
+  , ShowHelper(..)
 
   ) where
 
@@ -213,8 +217,10 @@ instance (Show a, Show (Signature c (ShowHelper (Signature c) a)), c (ShowHelper
 --
 -- @deriveInstances ''Num@
 deriveInstances :: Name -> Q [Dec]
-deriveInstances = deriveInstances' ''ForallLifted 'dictLifted ''Free ''LiftAFree ''ShowHelper
+deriveInstances = deriveInstances' True ''ForallLifted 'dictLifted ''Free ''LiftAFree ''ShowHelper
 
-deriveInstances' ''ForallLifted 'dictLifted ''Free ''LiftAFree ''ShowHelper ''Num
-deriveInstances' ''ForallLifted 'dictLifted ''Free ''LiftAFree ''ShowHelper ''Semigroup
-deriveInstances' ''ForallLifted 'dictLifted ''Free ''LiftAFree ''ShowHelper ''Monoid
+deriveInstances' False ''ForallLifted 'dictLifted ''Free ''LiftAFree ''ShowHelper ''Num
+deriveInstances' False ''ForallLifted 'dictLifted ''Free ''LiftAFree ''ShowHelper ''Fractional
+deriveInstances' False ''ForallLifted 'dictLifted ''Free ''LiftAFree ''ShowHelper ''Floating
+deriveInstances' False ''ForallLifted 'dictLifted ''Free ''LiftAFree ''ShowHelper ''Semigroup
+deriveInstances' False ''ForallLifted 'dictLifted ''Free ''LiftAFree ''ShowHelper ''Monoid

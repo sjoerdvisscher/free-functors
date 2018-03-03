@@ -1,5 +1,10 @@
 CHANGELOG
 
+0.8.1 -> 0.8.2
+  - Support for `deriveInstances` for classes which have one or more superclasses
+  - `deriveInstances` now also derives the `HasSuperClasses` instance
+  - Expose internal `ShowHelper` datatype
+  
 0.8 -> 0.8.1
   - Added HHCofree
   - Changes towards support for `SuperClass1` in TH code for `Free`
