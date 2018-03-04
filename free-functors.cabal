@@ -34,6 +34,7 @@ Library
   exposed-modules:
     Data.Constraint.Class1,
     Data.Functor.Cofree,
+    Data.Functor.Free.TH
     Data.Functor.Free,
     Data.Functor.HCofree,
     Data.Functor.HFree,
