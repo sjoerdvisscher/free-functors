@@ -35,7 +35,6 @@ import Data.Biapplicative
 import Data.Functor.Contravariant
 import Data.Functor.Contravariant.Divisible
 import Data.Profunctor
-import Data.Semigroup
 
 -- | Proof that @b@ is a superclass of @h@, i.e. @h x@ entails @b x@.
 scls1 :: forall b h x. SuperClass1 b h => h x :- b x
@@ -89,7 +88,10 @@ instance HasSuperClasses RealFloat where
   superClasses = Sub Dict
   containsSelf = Sub Dict
 instance HasSuperClasses Semigroup
-instance HasSuperClasses Monoid
+instance HasSuperClasses Monoid where
+  type SuperClasses Monoid = Monoid ': SuperClasses Semigroup
+  superClasses = Sub Dict
+  containsSelf = Sub Dict
 
 instance HasSuperClasses Functor
 instance HasSuperClasses Applicative where
