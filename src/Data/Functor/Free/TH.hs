@@ -75,17 +75,6 @@ instance (forall x. c (Extract x), forall x. c (Duplicate (Free c) x))
   duplicate = getDuplicate . rightAdjunct (Duplicate . unit . unit)
       
 
-class ForallLifted c where
-  dictLifted :: Applicative f => Dict (c (LiftAFree c f a))
-
-rightAdjunctLifted :: (ForallLifted c, Applicative f) => (a -> LiftAFree c f b) -> Free c a -> LiftAFree c f b
-rightAdjunctLifted = h dictLifted rightAdjunct
-  where
-    h :: Dict (c (t f b))
-      -> (c (t f b) => (a -> t f b) -> Free c a -> t f b)
-      -> (a -> t f b) -> Free c a -> t f b
-    h Dict f = f
-
 newtype LiftAFree c f a = LiftAFree { getLiftAFree :: f (Free c a) }
 
 instance SuperClass1 (Class f) c => Algebra f (Free c a) where
@@ -97,11 +86,11 @@ instance SuperClass1 (Class f) c => Algebra f (Free c a) where
 instance (Applicative f, SuperClass1 (Class s) c) => Algebra s (LiftAFree c f a) where
   algebra = LiftAFree . fmap algebra . traverse getLiftAFree
 
-instance ForallLifted c => Foldable (Free c) where
+instance (forall f x. Applicative f => c (LiftAFree c f x)) => Foldable (Free c) where
   foldMap = foldMapDefault
 
-instance ForallLifted c => Traversable (Free c) where
-  traverse f = getLiftAFree . rightAdjunctLifted (LiftAFree . fmap unit . f)
+instance (forall f x. Applicative f => c (LiftAFree c f x)) => Traversable (Free c) where
+  traverse f = getLiftAFree . rightAdjunct (LiftAFree . fmap unit . f)
 
 
 data ShowHelper f a = ShowUnit a | ShowRec (f (ShowHelper f a))
@@ -127,7 +116,6 @@ deriveInstances' withHSC nm = getSignatureInfo nm >>= h where
     , deriveInstanceWith_skipSignature showHelperHeader $ return []
     , deriveSuperclassInstances showHelperHeader
     , hasSuperClassesInstance
-    , [d|instance ForallLifted $c where dictLifted = Dict|]
     ]
     where
       freeHeader = [t|forall a vc. SuperClass1 $c vc => $c (Free vc a)|]
