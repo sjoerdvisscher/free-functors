@@ -3,10 +3,8 @@
   , RankNTypes
   , TypeOperators
   , ConstraintKinds
-  , FlexibleContexts
-  , FlexibleInstances
-  , ScopedTypeVariables
   , UndecidableInstances
+  , QuantifiedConstraints
   #-}
 -----------------------------------------------------------------------------
 -- |
@@ -28,9 +26,8 @@ module Data.Functor.HCofree where
 
 import Control.Comonad
 import Control.Comonad.Trans.Class
+import Data.Foldable
 import Data.Functor.Identity
-import Data.Constraint
-import Data.Constraint.Class1
 
 -- | Natural transformations.
 type f :~> g = forall b. f b -> g b
@@ -78,31 +75,36 @@ coiter f = leftAdjunct (f . runIdentity) . Identity
 unwrap :: HCofree Comonad g a -> g (HCofree Comonad g a)
 unwrap = counit . duplicate
 
-instance SuperClass1 Functor c => Functor (HCofree c g) where
-  fmap f (HCofree k a) = HCofree k (h scls1 f a)
-    where
-      h :: c f => (c f :- Functor f) -> (a -> b) -> f a -> f b
-      h (Sub Dict) = fmap
+instance (forall x. c x => Functor x) => Functor (HCofree c g) where
+  fmap f (HCofree k a) = HCofree k (fmap f a)
+  a <$ HCofree k b = HCofree k (a <$ b)
 
-instance SuperClass1 Foldable c => Foldable (HCofree c g) where
-  foldMap f (HCofree _ a) = h scls1 f a
-    where
-      h :: (c f, Monoid m) => (c f :- Foldable f) -> (a -> m) -> f a -> m
-      h (Sub Dict) = foldMap
+instance (forall x. c x => Foldable x) => Foldable (HCofree c g) where
+  foldMap f (HCofree _ a) = foldMap f a
+  fold (HCofree _ a) = fold a
+  foldr f z (HCofree _ a) = foldr f z a
+  foldl f z (HCofree _ a) = foldl f z a
+  foldl' f z (HCofree _ a) = foldl' f z a
+  foldr1 f (HCofree _ a) = foldr1 f a
+  foldr' f z (HCofree _ a) = foldr' f z a
+  foldl1 f (HCofree _ a) = foldl1 f a
+  toList (HCofree _ a) = toList a
+  null (HCofree _ a) = null a
+  length (HCofree _ a) = length a
+  elem e (HCofree _ a) = elem e a
+  maximum (HCofree _ a) = maximum a
+  minimum (HCofree _ a) = minimum a
+  sum (HCofree _ a) = sum a
+  product (HCofree _ a) = product a
 
-instance SuperClass1 Traversable c => Traversable (HCofree c g) where
-  traverse f (HCofree k a) = HCofree k <$> h scls1 f a
-    where
-      h :: (c t, Applicative f) => (c t :- Traversable t) -> (a -> f b) -> t a -> f (t b)
-      h (Sub Dict) = traverse
+instance (forall x. c x => Traversable x) => Traversable (HCofree c g) where
+  traverse f (HCofree k a) = HCofree k <$> traverse f a
+  sequenceA (HCofree k a) = HCofree k <$> sequenceA a
+  mapM f (HCofree k a) = HCofree k <$> mapM f a
+  sequence (HCofree k a) = HCofree k <$> sequence a
 
 -- | The cofree comonad of a functor.
-instance SuperClass1 Comonad c => Comonad (HCofree c g) where
-  extract (HCofree _ a) = h scls1 a
-    where
-      h :: c f => (c f :- Comonad f) -> f a -> a
-      h (Sub Dict) = extract
-  extend f (HCofree k a) = HCofree k $ h scls1 (f . HCofree k) a
-    where
-      h :: c f => (c f :- Comonad f) -> (f a -> b) -> (f a -> f b)
-      h (Sub Dict) = extend
+instance (forall x. c x => Comonad x) => Comonad (HCofree c g) where
+  extract (HCofree _ a) = extract a
+  extend f (HCofree k a) = HCofree k $ extend (f . HCofree k) a
+  duplicate (HCofree k a) = HCofree k $ extend (HCofree k) a

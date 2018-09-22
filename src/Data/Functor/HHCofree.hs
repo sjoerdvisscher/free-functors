@@ -8,6 +8,7 @@
   , ScopedTypeVariables
   , UndecidableInstances
   , MultiParamTypeClasses
+  , QuantifiedConstraints
   #-}
 -----------------------------------------------------------------------------
 -- |
@@ -26,15 +27,12 @@
 module Data.Functor.HHCofree where
 
 import Prelude hiding ((.), id)
-import Data.Constraint (Dict(..), (:-)(..))
-import Data.Constraint.Class1
-import Data.Functor.HHFree (HHFree(..))
-import qualified Data.Functor.HHFree as F
 
 import Control.Category
-import Data.Bifunctor (Bifunctor(bimap))
+import Data.Bifunctor
 import Data.Bifunctor.Functor
 import Data.Profunctor
+import Data.Profunctor.Unsafe
 import Data.Profunctor.Monad
 
 
@@ -85,32 +83,25 @@ instance ProfunctorComonad (HHCofree c) where
   produplicate = hextend id
 
 
-instance SuperClass1 Bifunctor c => Bifunctor (HHCofree c g) where
-  bimap f g (HHCofree k a) = HHCofree k (h scls1 f g a)
-    where
-      h :: c f => (c f :- Bifunctor f) -> (a -> a') -> (b -> b') -> f a b -> f a' b'
-      h (Sub Dict) = bimap
+instance (forall x. c x => Bifunctor x) => Bifunctor (HHCofree c g) where
+  bimap f g (HHCofree k a) = HHCofree k (bimap f g a)
+  first f (HHCofree k a) = HHCofree k (first f a)
+  second f (HHCofree k a) = HHCofree k (second f a)
       
-instance SuperClass1 Profunctor c => Profunctor (HHCofree c g) where
-  dimap f g (HHCofree k a) = HHCofree k (h scls1 f g a)
-    where
-      h :: c f => (c f :- Profunctor f) -> (a' -> a) -> (b -> b') -> f a b -> f a' b'
-      h (Sub Dict) = dimap
+instance (forall x. c x => Profunctor x) => Profunctor (HHCofree c g) where
+  dimap f g (HHCofree k a) = HHCofree k (dimap f g a)
+  lmap f (HHCofree k a) = HHCofree k (lmap f a)
+  rmap f (HHCofree k a) = HHCofree k (rmap f a)
+  f #. HHCofree k g = HHCofree k (f #. g)
+  HHCofree k g .# f = HHCofree k (g .# f)
       
-instance SuperClass1 Strong c => Strong (HHCofree c f) where
-  first' (HHCofree k a) = HHCofree k (h scls1 a)
-    where
-      h :: c g => (c g :- Strong g) -> g a b -> g (a, d) (b, d)
-      h (Sub Dict) = first'
+instance (forall x. c x => Strong x) => Strong (HHCofree c f) where
+  first' (HHCofree k a) = HHCofree k (first' a)
+  second' (HHCofree k a) = HHCofree k (second' a)
       
-instance SuperClass1 Choice c => Choice (HHCofree c f) where
-  left' (HHCofree k a) = HHCofree k (h scls1 a)
-    where
-      h :: c g => (c g :- Choice g) -> g a b -> g (Either a d) (Either b d)
-      h (Sub Dict) = left'
+instance (forall x. c x => Choice x) => Choice (HHCofree c f) where
+  left' (HHCofree k a) = HHCofree k (left' a)
+  right' (HHCofree k a) = HHCofree k (right' a)
       
-instance SuperClass1 Closed c => Closed (HHCofree c f) where
-  closed (HHCofree k a) = HHCofree k (h scls1 a)
-    where
-      h :: c g => (c g :- Closed g) -> g a b -> g (d -> a) (d -> b)
-      h (Sub Dict) = closed
+instance (forall x. c x => Closed x) => Closed (HHCofree c f) where
+  closed (HHCofree k a) = HHCofree k (closed a)

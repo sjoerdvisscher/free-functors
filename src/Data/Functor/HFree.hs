@@ -2,9 +2,8 @@
     RankNTypes
   , TypeOperators
   , ConstraintKinds
-  , FlexibleContexts
-  , ScopedTypeVariables
   , UndecidableInstances
+  , QuantifiedConstraints
   #-}
 -----------------------------------------------------------------------------
 -- |
@@ -29,10 +28,6 @@ import Control.Monad.Trans.Class
 import Data.Functor.Identity
 import Data.Functor.Contravariant
 import Data.Functor.Contravariant.Divisible
-import Data.Constraint
-import Data.Constraint.Class1
-import Data.Void
-
 
 -- | Natural transformations.
 type f :~> g = forall b. f b -> g b
@@ -80,65 +75,41 @@ wrap :: f (HFree Monad f a) -> HFree Monad f a
 wrap as = unit as >>= id
 
 
-instance SuperClass1 Functor c => Functor (HFree c f) where
-  fmap f (HFree g) = HFree $ \k -> h scls1 f (g k)
-    where
-      h :: c g => (c g :- Functor g) -> (a -> b) -> g a -> g b
-      h (Sub Dict) = fmap
+instance (forall x. c x => Functor x) => Functor (HFree c f) where
+  fmap f (HFree g) = HFree $ \k -> fmap f (g k)
+  a <$ HFree g = HFree $ \k -> a <$ g k
 
-instance SuperClass1 Applicative c => Applicative (HFree c f) where
-  pure a = HFree $ const (h scls1 a)
-    where
-      h :: c g => (c g :- Applicative g) -> a -> g a
-      h (Sub Dict) = pure
-  HFree f <*> HFree g = HFree $ \k -> h scls1 (f k) (g k)
-    where
-      h :: c g => (c g :- Applicative g) -> g (a -> b) -> g a -> g b
-      h (Sub Dict) = (<*>)
+instance (forall x. c x => Applicative x) => Applicative (HFree c f) where
+  pure a = HFree $ const (pure a)
+  HFree f <*> HFree g = HFree $ \k -> f k <*> g k
+  HFree f <* HFree g = HFree $ \k -> f k <* g k
+  HFree f *> HFree g = HFree $ \k -> f k *> g k
+  liftA2 f (HFree g) (HFree h) = HFree $ \k -> liftA2 f (g k) (h k)
 
-instance SuperClass1 Alternative c => Alternative (HFree c f) where
-  empty = HFree $ const (h scls1)
-    where
-      h :: c g => (c g :- Alternative g) -> g a
-      h (Sub Dict) = empty
-  HFree f <|> HFree g = HFree $ \k -> h scls1 (f k) (g k)
-    where
-      h :: c g => (c g :- Alternative g) -> g a -> g a -> g a
-      h (Sub Dict) = (<|>)
+instance (forall x. c x => Alternative x) => Alternative (HFree c f) where
+  empty = HFree $ const empty
+  HFree f <|> HFree g = HFree $ \k -> f k <|> g k
+  many (HFree f) = HFree $ \k -> many (f k)
+  some (HFree f) = HFree $ \k -> some (f k)
 
 -- | The free monad of a functor.
-instance SuperClass1 Monad c => Monad (HFree c f) where
+instance (forall x. c x => Monad x) => Monad (HFree c f) where
   return = pure
-  HFree f >>= g = HFree $ \k -> h scls1 (f k) (rightAdjunct k . g)
-    where
-      h :: c g => (c g :- Monad g) -> g a -> (a -> g b) -> g b
-      h (Sub Dict) = (>>=)
+  HFree f >>= g = HFree $ \k -> f k >>= rightAdjunct k . g
+  HFree f >> HFree g = HFree $ \k -> f k >> g k
+  fail s = HFree $ const (fail s)
 
 -- HFree Monad is only a monad transformer if rightAdjunct is called with monad morphisms.
 -- F.e. lift . return == return fails if the results are inspected with rightAdjunct (const Nothing).
 
-instance SuperClass1 Contravariant c => Contravariant (HFree c f) where
-  contramap f (HFree g) = HFree $ \k -> h scls1 f (g k)
-    where
-      h :: c g => (c g :- Contravariant g) -> (b -> a) -> g a -> g b
-      h (Sub Dict) = contramap
+instance (forall x. c x => Contravariant x) => Contravariant (HFree c f) where
+  contramap f (HFree g) = HFree $ \k -> contramap f (g k)
+  a >$ HFree g = HFree $ \k -> a >$ g k
 
-instance SuperClass1 Divisible c => Divisible (HFree c f) where
-  divide f (HFree a) (HFree b) = HFree $ \k -> h scls1 f (a k) (b k)
-    where
-      h :: c g => (c g :- Divisible g) -> (a -> (b, d)) -> g b -> g d -> g a
-      h (Sub Dict) = divide
-  conquer = HFree $ const (h scls1)
-    where
-      h :: c g => (c g :- Divisible g) -> g a
-      h (Sub Dict) = conquer
+instance (forall x. c x => Divisible x) => Divisible (HFree c f) where
+  divide f (HFree a) (HFree b) = HFree $ \k -> divide f (a k) (b k)
+  conquer = HFree $ const conquer
 
-instance SuperClass1 Decidable c => Decidable (HFree c f) where
-  choose f (HFree a) (HFree b) = HFree $ \k -> h scls1 f (a k) (b k)
-    where
-      h :: c g => (c g :- Decidable g) -> (a -> Either b d) -> g b -> g d -> g a
-      h (Sub Dict) = choose
-  lose f = HFree $ const (h scls1 f)
-    where
-      h :: c g => (c g :- Decidable g) -> (a -> Void) -> g a
-      h (Sub Dict) = lose
+instance (forall x. c x => Decidable x) => Decidable (HFree c f) where
+  choose f (HFree a) (HFree b) = HFree $ \k -> choose f (a k) (b k)
+  lose f = HFree $ const (lose f)

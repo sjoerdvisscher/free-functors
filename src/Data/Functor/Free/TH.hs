@@ -13,12 +13,12 @@
   , TemplateHaskell
   , PolyKinds
   , DataKinds
+  , QuantifiedConstraints
   #-}
 module Data.Functor.Free.TH where
 
 import Data.Constraint hiding (Class)
 import Data.Constraint.Class1
-import Data.Constraint.Forall
 
 import Control.Comonad
 import Data.Algebra
@@ -40,15 +40,6 @@ unit a = Free $ \k -> k a
 -- | `rightAdjunct` is the destructor of @`Free` c@ values.
 rightAdjunct :: c b => (a -> b) -> Free c a -> b
 rightAdjunct f g = runFree g f
-
-rightAdjunctF :: ForallF c f => (a -> f b) -> Free c a -> f b
-rightAdjunctF = h instF rightAdjunct
-  where
-    h :: ForallF c f
-      => (ForallF c f :- c (f b))
-      -> (c (f b) => (a -> f b) -> Free c a -> f b)
-      -> (a -> f b) -> Free c a -> f b
-    h (Sub Dict) f = f
 
 -- | @counit = rightAdjunct id@
 counit :: c a => Free c a -> a
@@ -78,10 +69,10 @@ instance Monad (Free c) where
 
 newtype Extract a = Extract { getExtract :: a }
 newtype Duplicate f a = Duplicate { getDuplicate :: f (f a) }
-instance (ForallF c Extract, ForallF c (Duplicate (Free c)))
+instance (forall x. c (Extract x), forall x. c (Duplicate (Free c) x))
   => Comonad (Free c) where
-  extract = getExtract . rightAdjunctF Extract
-  duplicate = getDuplicate . rightAdjunctF (Duplicate . unit . unit)
+  extract = getExtract . rightAdjunct Extract
+  duplicate = getDuplicate . rightAdjunct (Duplicate . unit . unit)
       
 
 class ForallLifted c where

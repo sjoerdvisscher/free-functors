@@ -1,12 +1,8 @@
 {-# LANGUAGE
     ConstraintKinds
-  , RankNTypes
-  , TypeOperators
-  , FlexibleInstances
   , GADTs
-  , MultiParamTypeClasses
   , UndecidableInstances
-  , ScopedTypeVariables
+  , QuantifiedConstraints
   #-}
 -----------------------------------------------------------------------------
 -- |
@@ -25,9 +21,6 @@ module Data.Functor.Cofree where
 import Control.Monad
 import Control.Comonad
 
-import Data.Constraint
-import Data.Constraint.Forall
-
 import Data.Functor.Identity
 import Data.Functor.Compose
 
@@ -42,15 +35,6 @@ counit (Cofree k a) = k a
 
 leftAdjunct :: c a => (a -> b) -> a -> Cofree c b
 leftAdjunct f a = Cofree f a
-
-leftAdjunctF :: ForallF c f => (f a -> b) -> f a -> Cofree c b
-leftAdjunctF = h instF leftAdjunct
-  where
-    h :: ForallF c f
-      => (ForallF c f :- c (f a))
-      -> (c (f a) => (f a -> b) -> f a -> Cofree c b)
-      -> (f a -> b) -> f a -> Cofree c b
-    h (Sub Dict) f = f
 
 -- | @unit = leftAdjunct id@
 unit :: c b => b -> Cofree c b
@@ -67,15 +51,15 @@ instance Comonad (Cofree c) where
   extract = counit
   duplicate (Cofree k a) = Cofree (leftAdjunct k) a
 
-instance (ForallF c Identity, ForallF c (Compose (Cofree c) (Cofree c)))
+instance (forall x. c (Identity x), forall x. c (Compose (Cofree c) (Cofree c) x))
   => Applicative (Cofree c) where
-  pure = leftAdjunctF runIdentity . Identity
+  pure = leftAdjunct runIdentity . Identity
   (<*>) = ap
 
-instance (ForallF c Identity, ForallF c (Compose (Cofree c) (Cofree c)))
+instance (forall x. c (Identity x), forall x. c (Compose (Cofree c) (Cofree c) x))
   => Monad (Cofree c) where
   return = pure
-  m >>= g = leftAdjunctF (extract . extract . getCompose) (Compose $ fmap g m)
+  m >>= g = leftAdjunct (extract . extract . getCompose) (Compose $ fmap g m)
 
 convert :: (c (w a), Comonad w) => w a -> Cofree c a
 convert = leftAdjunct extract

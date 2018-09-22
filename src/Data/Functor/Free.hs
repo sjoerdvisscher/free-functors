@@ -34,7 +34,6 @@ module Data.Functor.Free (
   , deriveInstances
   , unit
   , rightAdjunct
-  , rightAdjunctF
   , counit
   , leftAdjunct
   , transform

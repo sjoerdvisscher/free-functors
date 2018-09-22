@@ -5,8 +5,6 @@ import Data.Functor.Free
 
 import Control.Comonad
 
-import Data.Semigroup
-
 -- A free semigroup allows you to create singletons and append them.
 -- So it is a non-empty list.
 type NonEmptyList = Free Semigroup
