@@ -1,24 +1,18 @@
 {-# LANGUAGE
-    ConstraintKinds
-  , GADTs
-  , RankNTypes
-  , TypeOperators
-  , FlexibleInstances
-  , MultiParamTypeClasses
-  , UndecidableInstances
-  , ScopedTypeVariables
+    RankNTypes
   , DeriveFunctor
   , DeriveFoldable
-  , DeriveTraversable
+  , ConstraintKinds
   , TemplateHaskell
-  , PolyKinds
-  , DataKinds
+  , DeriveTraversable
+  , FlexibleInstances
+  , ScopedTypeVariables
+  , UndecidableInstances
   , QuantifiedConstraints
+  , MultiParamTypeClasses
+  , UndecidableSuperClasses
   #-}
-module Data.Functor.Free.TH where
-
-import Data.Constraint hiding (Class)
-import Data.Constraint.Class1
+module Data.Functor.Free.Internal where
 
 import Control.Comonad
 import Data.Algebra
@@ -75,15 +69,15 @@ instance (forall x. c (Extract x), forall x. c (Duplicate (Free c) x))
   duplicate = getDuplicate . rightAdjunct (Duplicate . unit . unit)
       
 
+class (Class f x) => Class' f x where evaluate' :: AlgebraSignature f => f x -> x
+instance (Class f x) => Class' f x where evaluate' = evaluate
+
 newtype LiftAFree c f a = LiftAFree { getLiftAFree :: f (Free c a) }
 
-instance SuperClass1 (Class f) c => Algebra f (Free c a) where
-  algebra fa = Free $ \k -> h scls1 (fmap (rightAdjunct k) fa)
-    where
-      h :: c b => (c b :- Class f b) -> f b -> b
-      h (Sub Dict) = evaluate
+instance (forall x. c x => Class' f x) => Algebra f (Free c a) where
+  algebra fa = Free $ \k -> evaluate' (fmap (rightAdjunct k) fa)
       
-instance (Applicative f, SuperClass1 (Class s) c) => Algebra s (LiftAFree c f a) where
+instance (Applicative f, forall x. c x => Class' s x) => Algebra s (LiftAFree c f a) where
   algebra = LiftAFree . fmap algebra . traverse getLiftAFree
 
 instance (forall f x. Applicative f => c (LiftAFree c f x)) => Foldable (Free c) where
@@ -106,8 +100,13 @@ instance (Show a, Show (Signature c (ShowHelper (Signature c) a)), c (ShowHelper
   showsPrec p = showsPrec p . rightAdjunct (ShowUnit :: a -> ShowHelper (Signature c) a)
 
 
-deriveInstances' :: Bool -> Name -> Q [Dec]
-deriveInstances' withHSC nm = getSignatureInfo nm >>= h where
+  -- | Derive the instances of @`Free` c a@ for the class @c@, `Show`, `Foldable` and `Traversable`.
+  --
+  -- For example:
+  --
+  -- @deriveInstances ''Num@
+deriveInstances :: Name -> Q [Dec]
+deriveInstances nm = getSignatureInfo nm >>= h where
   h sigInfo =
     concat <$> sequenceA
     [ deriveSignature nm
@@ -115,17 +114,10 @@ deriveInstances' withHSC nm = getSignatureInfo nm >>= h where
     , deriveInstanceWith_skipSignature liftAFreeHeader $ return []
     , deriveInstanceWith_skipSignature showHelperHeader $ return []
     , deriveSuperclassInstances showHelperHeader
-    , hasSuperClassesInstance
     ]
     where
-      freeHeader = [t|forall a vc. SuperClass1 $c vc => $c (Free vc a)|]
-      liftAFreeHeader = [t|forall f a vc. (Applicative f, SuperClass1 $c vc) => $c (LiftAFree vc f a)|]
-      showHelperHeader = [t|forall a. $c (ShowHelper $sig a)|]
-      hasSuperClassesInstance = if withHSC then [d|instance HasSuperClasses $c where {
-        type SuperClasses $c = $c ': $scs;
-        superClasses = Sub Dict;
-        containsSelf = Sub Dict
-      }|] else return []
-      scs = foldr (\(SuperclassTH scnm _ _) q -> [t|SuperClasses $(pure (ConT scnm)) ++ $q|]) [t|'[]|] $ superclasses sigInfo
-      c = pure $ ConT nm
+      freeHeader = [t|forall a c. (forall x. c x => $clss x) => $clss (Free c a)|]
+      liftAFreeHeader = [t|forall f a c. (Applicative f, forall x. c x => $clss x) => $clss (LiftAFree c f a)|]
+      showHelperHeader = [t|forall a. $clss (ShowHelper $sig a)|]
+      clss = pure $ ConT nm
       sig = pure . ConT $ signatureName sigInfo

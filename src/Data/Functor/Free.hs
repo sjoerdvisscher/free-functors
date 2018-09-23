@@ -1,20 +1,14 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE
-    ConstraintKinds
-  , GADTs
-  , RankNTypes
-  , TypeOperators
-  , FlexibleInstances
-  , MultiParamTypeClasses
-  , UndecidableInstances
-  , ScopedTypeVariables
+    TypeFamilies
   , DeriveFunctor
   , DeriveFoldable
-  , DeriveTraversable
+  , ConstraintKinds
   , TemplateHaskell
-  , PolyKinds
-  , TypeFamilies
-  , DataKinds
+  , DeriveTraversable
+  , FlexibleInstances
+  , UndecidableInstances
+  , QuantifiedConstraints
   #-}
 -----------------------------------------------------------------------------
 -- |
@@ -60,9 +54,7 @@ import Data.Function
 
 import Data.Void
 
-import Language.Haskell.TH.Syntax
-
-import Data.Functor.Free.TH
+import Data.Functor.Free.Internal
 
 -- | @unfold f = coproduct (unfold f) unit . f@
 --
@@ -101,16 +93,8 @@ initial :: c r => InitialObject c -> r
 initial = rightAdjunct absurd
 
 
--- | Derive the instances of @`Free` c a@ for the class @c@, `Show`, `Foldable` and `Traversable`.
---
--- For example:
---
--- @deriveInstances ''Num@
-deriveInstances :: Name -> Q [Dec]
-deriveInstances = deriveInstances' True
-
-deriveInstances' False ''Num
-deriveInstances' False ''Fractional
-deriveInstances' False ''Floating
-deriveInstances' False ''Semigroup
-deriveInstances' False ''Monoid
+deriveInstances ''Num
+deriveInstances ''Fractional
+deriveInstances ''Floating
+-- deriveInstances ''Semigroup
+-- deriveInstances ''Monoid
