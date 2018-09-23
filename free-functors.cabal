@@ -40,6 +40,9 @@ Library
     Data.Functor.HHCofree,
     Data.Functor.HHFree
 
+  other-modules:
+    Data.Functor.Free.TH  
+
   default-language:
     Haskell2010
 
