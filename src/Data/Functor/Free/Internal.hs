@@ -1,5 +1,6 @@
 {-# LANGUAGE
     RankNTypes
+  , TypeOperators
   , DeriveFunctor
   , DeriveFoldable
   , ConstraintKinds
@@ -100,11 +101,14 @@ instance (Show a, Show (Signature c (ShowHelper (Signature c) a)), c (ShowHelper
   showsPrec p = showsPrec p . rightAdjunct (ShowUnit :: a -> ShowHelper (Signature c) a)
 
 
-  -- | Derive the instances of @`Free` c a@ for the class @c@, `Show`, `Foldable` and `Traversable`.
-  --
-  -- For example:
-  --
-  -- @deriveInstances ''Num@
+class (a => b) => a :=> b
+instance (a => b) => a :=> b
+
+-- | Derive the instances of @`Free` c a@ for the class @c@, `Show`, `Foldable` and `Traversable`.
+--
+-- For example:
+--
+-- @deriveInstances ''Num@
 deriveInstances :: Name -> Q [Dec]
 deriveInstances nm = getSignatureInfo nm >>= h where
   h sigInfo =
@@ -116,8 +120,8 @@ deriveInstances nm = getSignatureInfo nm >>= h where
     , deriveSuperclassInstances showHelperHeader
     ]
     where
-      freeHeader = [t|forall a c. (forall x. c x => $clss x) => $clss (Free c a)|]
-      liftAFreeHeader = [t|forall f a c. (Applicative f, forall x. c x => $clss x) => $clss (LiftAFree c f a)|]
+      freeHeader = [t|forall a c. (forall x. c x :=> $clss x) => $clss (Free c a)|]
+      liftAFreeHeader = [t|forall f a c. (Applicative f, forall x. c x :=> $clss x) => $clss (LiftAFree c f a)|]
       showHelperHeader = [t|forall a. $clss (ShowHelper $sig a)|]
       clss = pure $ ConT nm
       sig = pure . ConT $ signatureName sigInfo

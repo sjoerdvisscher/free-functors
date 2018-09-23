@@ -1,6 +1,7 @@
 {-# OPTIONS_GHC -fno-warn-orphans #-}
 {-# LANGUAGE
     TypeFamilies
+  , TypeOperators
   , DeriveFunctor
   , DeriveFoldable
   , ConstraintKinds
@@ -9,6 +10,7 @@
   , FlexibleInstances
   , UndecidableInstances
   , QuantifiedConstraints
+  , MultiParamTypeClasses
   #-}
 -----------------------------------------------------------------------------
 -- |
@@ -96,5 +98,5 @@ initial = rightAdjunct absurd
 deriveInstances ''Num
 deriveInstances ''Fractional
 deriveInstances ''Floating
--- deriveInstances ''Semigroup
--- deriveInstances ''Monoid
+deriveInstances ''Semigroup
+deriveInstances ''Monoid
