@@ -1,5 +1,6 @@
 {-# LANGUAGE
-    RankNTypes
+    GADTs
+  , RankNTypes
   , TypeOperators
   , DeriveFunctor
   , DeriveFoldable
@@ -88,17 +89,19 @@ instance (forall f x. Applicative f => c (LiftAFree c f x)) => Traversable (Free
   traverse f = getLiftAFree . rightAdjunct (LiftAFree . fmap unit . f)
 
 
-data ShowHelper f a = ShowUnit a | ShowRec (f (ShowHelper f a))
+data ShowHelper a where 
+  ShowUnit :: a -> ShowHelper a
+  ShowRec :: Show (f (ShowHelper a)) => f (ShowHelper a) -> ShowHelper a
 
-instance Algebra f (ShowHelper f a) where
+instance Show (f (ShowHelper a)) => Algebra f (ShowHelper a) where
   algebra = ShowRec
 
-instance (Show a, Show (f (ShowHelper f a))) => Show (ShowHelper f a) where
+instance Show a => Show (ShowHelper a) where
   showsPrec p (ShowUnit a) = showParen (p > 10) $ showString "unit " . showsPrec 11 a
   showsPrec p (ShowRec f) = showsPrec p f
 
-instance (Show a, Show (Signature c (ShowHelper (Signature c) a)), c (ShowHelper (Signature c) a)) => Show (Free c a) where
-  showsPrec p = showsPrec p . rightAdjunct (ShowUnit :: a -> ShowHelper (Signature c) a)
+instance (Show a, Show (Signature c (ShowHelper a)), c (ShowHelper a)) => Show (Free c a) where
+  showsPrec p = showsPrec p . rightAdjunct ShowUnit
 
 
 class (a => b) => a :=> b
@@ -110,18 +113,15 @@ instance (a => b) => a :=> b
 --
 -- @deriveInstances ''Num@
 deriveInstances :: Name -> Q [Dec]
-deriveInstances nm = getSignatureInfo nm >>= h where
-  h sigInfo =
-    concat <$> sequenceA
-    [ deriveSignature nm
-    , deriveInstanceWith_skipSignature freeHeader $ return []
-    , deriveInstanceWith_skipSignature liftAFreeHeader $ return []
-    , deriveInstanceWith_skipSignature showHelperHeader $ return []
-    , deriveSuperclassInstances showHelperHeader
-    ]
-    where
-      freeHeader = [t|forall a c. (forall x. c x :=> $clss x) => $clss (Free c a)|]
-      liftAFreeHeader = [t|forall f a c. (Applicative f, forall x. c x :=> $clss x) => $clss (LiftAFree c f a)|]
-      showHelperHeader = [t|forall a. $clss (ShowHelper $sig a)|]
-      clss = pure $ ConT nm
-      sig = pure . ConT $ signatureName sigInfo
+deriveInstances nm = 
+  concat <$> sequenceA
+  [ deriveSignature nm
+  , deriveInstanceWith_skipSignature freeHeader $ return []
+  , deriveInstanceWith_skipSignature liftAFreeHeader $ return []
+  , deriveInstanceWith_skipSignature showHelperHeader $ return []
+  ]
+  where
+    freeHeader = [t|forall a c. (forall x. c x :=> $clss x) => $clss (Free c a)|]
+    liftAFreeHeader = [t|forall f a c. (Applicative f, forall x. c x :=> $clss x) => $clss (LiftAFree c f a)|]
+    showHelperHeader = [t|forall a. Show a => $clss (ShowHelper a)|]
+    clss = pure $ ConT nm
