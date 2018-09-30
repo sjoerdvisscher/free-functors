@@ -1,6 +1,7 @@
-{-# OPTIONS_GHC -fno-warn-orphans #-}
+{-# OPTIONS_GHC -fno-warn-orphans -fno-warn-unused-matches #-}
 {-# LANGUAGE
-    TypeFamilies
+    RankNTypes
+  , TypeFamilies
   , TypeOperators
   , DeriveFunctor
   , DeriveFoldable
@@ -27,6 +28,7 @@
 module Data.Functor.Free (
 
     Free(..)
+  , deriveFreeInstance
   , deriveInstances
   , unit
   , rightAdjunct
@@ -46,17 +48,78 @@ module Data.Functor.Free (
   , inR
   , InitialObject
   , initial
-  
-  -- * Internal
-  , ShowHelper(..)
 
   ) where
 
-import Data.Function
-
+import Data.Function (fix)
+import Data.Monoid (Ap(..))
 import Data.Void
+import Data.Traversable
+import Control.Comonad
 
+import Language.Haskell.TH.Syntax
 import Data.Functor.Free.Internal
+import Data.DeriveLiftedInstances (ShowsPrec(..))
+
+
+-- | The free functor for class @c@.
+--
+--   @Free c a@ is basically an expression tree with operations from class @c@
+--   and variables/placeholders of type @a@, created with `unit`.
+--   Monadic bind allows you to replace each of these variables with another sub-expression.
+newtype Free c a = Free { runFree :: forall b. c b => (a -> b) -> b }
+
+-- | `unit` allows you to create @`Free` c@ values, together with the operations from the class @c@.
+unit :: a -> Free c a
+unit a = Free $ \k -> k a
+
+-- | `rightAdjunct` is the destructor of @`Free` c@ values.
+rightAdjunct :: c b => (a -> b) -> Free c a -> b
+rightAdjunct f g = runFree g f
+
+-- | @counit = rightAdjunct id@
+counit :: c a => Free c a -> a
+counit = rightAdjunct id
+
+-- | @leftAdjunct f = f . unit@
+leftAdjunct :: (Free c a -> b) -> a -> b
+leftAdjunct f = f . unit
+
+-- | @transform f as = as >>= f unit@
+--
+-- @transform f . transform g = transform (g . f)@
+transform :: (forall r. c r => (b -> r) -> a -> r) -> Free c a -> Free c b
+transform t (Free f) = Free (f . t)
+
+
+instance Functor (Free c) where
+  fmap f = transform (. f)
+
+instance Applicative (Free c) where
+  pure = unit
+  fs <*> as = transform (\k f -> rightAdjunct (k . f) as) fs
+
+instance Monad (Free c) where
+  return = unit
+  as >>= f = transform (\k -> rightAdjunct k . f) as
+
+instance (forall f x. Applicative f => c (Ap f (Free c x))) => Foldable (Free c) where
+  foldMap = foldMapDefault
+
+instance (forall f x. Applicative f => c (Ap f (Free c x))) => Traversable (Free c) where
+  traverse f = getAp . rightAdjunct (Ap . fmap unit . f)
+
+instance (Show a, c ShowsPrec) => Show (Free c a) where
+  showsPrec p = showsPrec p . rightAdjunct (\a -> ShowsPrec $ \d -> showParen (d > 10) $ showString "pure " . showsPrec 11 a)
+
+  
+newtype Extract a = Extract { getExtract :: a }
+newtype Duplicate f a = Duplicate { getDuplicate :: f (f a) }
+instance (forall x. c (Extract x), forall x. c (Duplicate (Free c) x))
+  => Comonad (Free c) where
+  extract = getExtract . rightAdjunct Extract
+  duplicate = getDuplicate . rightAdjunct (Duplicate . unit . unit)
+
 
 -- | @unfold f = coproduct (unfold f) unit . f@
 --
@@ -94,9 +157,27 @@ type InitialObject c = Free c Void
 initial :: c r => InitialObject c -> r
 initial = rightAdjunct absurd
 
+-- | Derive the instance of @`Free` c a@ for the class @c@.
+--
+-- For example:
+--
+-- @deriveFreeInstance ''Num@
+deriveFreeInstance :: Name -> Q [Dec]
+deriveFreeInstance = deriveFreeInstance' ''Free 'Free 'runFree
 
-deriveInstances ''Num
-deriveInstances ''Fractional
-deriveInstances ''Floating
-deriveInstances ''Semigroup
-deriveInstances ''Monoid
+-- | Derive the instance of @`Free` c a@ for the class @c@.
+-- This also derives the instance of @ShowsPrec@ for the class @c@, which is needed for the @Show@ instance of @Free@.
+-- 
+-- For example:
+--
+-- @deriveInstances ''Num@
+deriveInstances :: Name -> Q [Dec]
+deriveInstances = deriveInstances' ''Free 'Free 'runFree
+
+deriveFreeInstance' ''Free 'Free 'runFree ''Num
+deriveFreeInstance' ''Free 'Free 'runFree ''Fractional
+deriveFreeInstance' ''Free 'Free 'runFree ''Floating
+deriveFreeInstance' ''Free 'Free 'runFree ''Semigroup
+deriveFreeInstance' ''Free 'Free 'runFree ''Monoid
+
+    

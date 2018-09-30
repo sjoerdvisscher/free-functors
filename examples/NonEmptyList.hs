@@ -25,4 +25,4 @@ fromList = foldr1 (<>) . map pure
 
 -- Test the comonad and foldable instances, returns [15,14,12,9,5].
 test :: NonEmptyList Int
-test = extend sum $ (pure 1 <> pure 2) <> (pure 3 <> (pure 4 <> pure 5))
+test = extend sum $ ((pure 1 <> pure 2) <> pure 3 <> pure 4) <> pure 5

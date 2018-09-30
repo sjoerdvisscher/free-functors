@@ -1,12 +1,10 @@
 {-# LANGUAGE 
-  TemplateHaskell, TypeFamilies, DeriveTraversable, FlexibleInstances, UndecidableInstances,
+  TemplateHaskell, FlexibleInstances, UndecidableInstances, 
   TypeOperators, MultiParamTypeClasses, ConstraintKinds, UndecidableSuperClasses, QuantifiedConstraints 
   #-}
   
 module Sem where
   
-import GHC.Generics
-import Data.Algebra
 import Data.Functor.Free
 
 class BaseSem a where
@@ -32,13 +30,6 @@ instance MulSem Int where
 
 class (a x, b x) => (a + b) x
 instance (a x, b x) => (a + b) x
-
-type instance Signature (a + b) = Signature a :+: Signature b
-
-instance (AlgebraSignature f, AlgebraSignature g) => AlgebraSignature (f :+: g) where
-  type Class (f :+: g) = Class f + Class g
-  evaluate (L1 f) = evaluate f
-  evaluate (R1 f) = evaluate f
   
 
 deriveInstances ''BaseSem

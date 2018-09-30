@@ -1,7 +1,9 @@
+{-# OPTIONS_GHC -fno-warn-unused-matches #-}
 {-# LANGUAGE
     RankNTypes
   , TypeOperators
   , ConstraintKinds
+  , TemplateHaskell
   , UndecidableInstances
   , QuantifiedConstraints
   #-}
@@ -26,12 +28,13 @@ import Prelude hiding ((.), id)
 import Control.Arrow
 import Control.Category
 import Data.Bifunctor (Bifunctor)
-import qualified Data.Bifunctor as B (Bifunctor(..))
 import Data.Bifunctor.Functor
-import Data.Biapplicative (Biapplicative(..))
+import Data.Biapplicative (Biapplicative)
 import Data.Profunctor
-import Data.Profunctor.Unsafe
 import Data.Profunctor.Monad
+
+import Language.Haskell.TH.Syntax (Q, Name, Dec)
+import Data.Functor.Free.Internal
 
 
 -- | Natural transformations.
@@ -79,61 +82,27 @@ instance ProfunctorMonad (HHFree c) where
   projoin = bind id
 
 
-instance (forall x. c x => Category x) => Category (HHFree c f) where
-  id = HHFree $ const id
-  HHFree f . HHFree g = HHFree $ \k -> f k . g k
+-- | Derive the instance of @`HHFree` c f a b@ for the class @c@,.
+--
+-- For example:
+--
+-- @deriveHHFreeInstance ''Category@
+deriveHHFreeInstance :: Name -> Q [Dec]
+deriveHHFreeInstance = deriveFreeInstance' ''HHFree 'HHFree 'runHHFree
 
-instance (forall x. c x => Arrow x) => Arrow (HHFree c f) where
-  arr f = HHFree $ const (arr f)
-  first (HHFree f) = HHFree $ \k -> first (f k)
-  second (HHFree f) = HHFree $ \k -> second (f k)
-  HHFree f *** HHFree g = HHFree $ \k -> f k *** g k
-  HHFree f &&& HHFree g = HHFree $ \k -> f k &&& g k
-
-instance (forall x. c x => ArrowZero x) => ArrowZero (HHFree c f) where
-  zeroArrow = HHFree $ const zeroArrow
-
-instance (forall x. c x => ArrowPlus x) => ArrowPlus (HHFree c f) where
-  HHFree f <+> HHFree g = HHFree $ \k -> f k <+> g k
-
-instance (forall x. c x => ArrowChoice x) => ArrowChoice (HHFree c f) where
-  left (HHFree f) = HHFree $ \k -> left (f k)
-  right (HHFree f) = HHFree $ \k -> right (f k)
-  HHFree f +++ HHFree g = HHFree $ \k -> f k +++ g k
-  HHFree f ||| HHFree g = HHFree $ \k -> f k ||| g k
+deriveFreeInstance' ''HHFree 'HHFree 'runHHFree ''Category
+deriveFreeInstance' ''HHFree 'HHFree 'runHHFree ''Arrow
+deriveFreeInstance' ''HHFree 'HHFree 'runHHFree ''ArrowZero
+deriveFreeInstance' ''HHFree 'HHFree 'runHHFree ''ArrowPlus
+deriveFreeInstance' ''HHFree 'HHFree 'runHHFree ''ArrowChoice
+deriveFreeInstance' ''HHFree 'HHFree 'runHHFree ''ArrowLoop
 
 instance (forall x. c x => ArrowApply x) => ArrowApply (HHFree c f) where
   app = HHFree $ \k -> app . arr (first (rightAdjunct k))
 
-instance (forall x. c x => ArrowLoop x) => ArrowLoop (HHFree c f) where
-  loop (HHFree f) = HHFree $ \k -> loop (f k)
-
-instance (forall x. c x => Bifunctor x) => Bifunctor (HHFree c f) where
-  first f (HHFree g) = HHFree $ \k -> B.first f (g k)
-  second f (HHFree g) = HHFree $ \k -> B.second f (g k)
-  bimap p q (HHFree g) = HHFree $ \k -> B.bimap p q (g k)
-
-instance (forall x. c x => Biapplicative x) => Biapplicative (HHFree c f) where
-  bipure a b = HHFree $ const (bipure a b)
-  HHFree f <<*>> HHFree g = HHFree $ \k -> f k <<*>> g k
-  HHFree f *>> HHFree g = HHFree $ \k -> f k *>> g k
-  HHFree f <<* HHFree g = HHFree $ \k -> f k <<* g k
-  biliftA2 p q (HHFree g) (HHFree h) = HHFree $ \k -> biliftA2 p q (g k) (h k)
-
-instance (forall x. c x => Profunctor x) => Profunctor (HHFree c f) where
-  lmap f (HHFree g) = HHFree $ \k -> lmap f (g k)
-  rmap f (HHFree g) = HHFree $ \k -> rmap f (g k)
-  f #. HHFree g = HHFree $ \k -> f #. g k
-  HHFree g .# f = HHFree $ \k -> g k .# f
-  dimap p q (HHFree g) = HHFree $ \k -> dimap p q (g k)
-
-instance (forall x. c x => Strong x) => Strong (HHFree c f) where
-  first' (HHFree f) = HHFree $ \k -> first' (f k)
-  second' (HHFree f) = HHFree $ \k -> second' (f k)
-
-instance (forall x. c x => Choice x) => Choice (HHFree c f) where
-  left' (HHFree f) = HHFree $ \k -> left' (f k)
-  right' (HHFree f) = HHFree $ \k -> right' (f k)
-
-instance (forall x. c x => Closed x) => Closed (HHFree c f) where
-  closed (HHFree f) = HHFree $ \k -> closed (f k)
+deriveFreeInstance' ''HHFree 'HHFree 'runHHFree ''Bifunctor
+deriveFreeInstance' ''HHFree 'HHFree 'runHHFree ''Biapplicative
+deriveFreeInstance' ''HHFree 'HHFree 'runHHFree ''Profunctor
+deriveFreeInstance' ''HHFree 'HHFree 'runHHFree ''Strong
+deriveFreeInstance' ''HHFree 'HHFree 'runHHFree ''Choice
+deriveFreeInstance' ''HHFree 'HHFree 'runHHFree ''Closed

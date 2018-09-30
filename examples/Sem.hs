@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, TypeFamilies, DeriveTraversable, FlexibleInstances, FlexibleContexts, UndecidableInstances, DataKinds #-}
+{-# LANGUAGE TemplateHaskell, UndecidableInstances, QuantifiedConstraints #-}
 module Sem where
   
 import Data.Functor.Free
