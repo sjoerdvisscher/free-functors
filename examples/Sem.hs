@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, UndecidableInstances, QuantifiedConstraints #-}
+{-# LANGUAGE TemplateHaskell, UndecidableInstances, QuantifiedConstraints, FlexibleInstances #-}
 module Sem where
   
 import Data.Functor.Free
@@ -33,3 +33,6 @@ evaluate = rightAdjunct lookupVar
 
 main :: IO ()
 main = putStrLn $ show test ++ " = " ++ show (evaluate test)
+
+vars :: Free AdvSem a -> [a]
+vars = foldMap pure

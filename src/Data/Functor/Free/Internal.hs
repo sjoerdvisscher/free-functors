@@ -16,6 +16,8 @@
   #-}
 module Data.Functor.Free.Internal where
 
+import Data.Monoid (Ap(..))
+
 import Language.Haskell.TH.Syntax
 import Data.DeriveLiftedInstances
 
@@ -34,13 +36,18 @@ freeDeriv free runFree = noopDeriv {
 }
 
 deriveFreeInstance' :: Name -> Name -> Name -> Name -> Q [Dec]
-deriveFreeInstance' tfree free runFree nm = deriveInstance (freeDeriv free runFree) [t|forall a c. (forall x. c x :=> $clss x) => $clss ($(pure $ ConT tfree) c a)|]
+deriveFreeInstance' tfree cfree runFree nm = deriveInstance (freeDeriv cfree runFree) [t|forall a c. (forall x. c x :=> $clss x) => $clss ($free c a)|]
   where
     clss = pure $ ConT nm
+    free = pure $ ConT tfree
 
 deriveInstances' :: Name -> Name -> Name -> Name -> Q [Dec]
-deriveInstances' tfree free runFree nm = 
-  (++) <$> deriveFreeInstance' tfree free runFree nm <*> deriveInstance showDeriv [t|$clss ShowsPrec|]
+deriveInstances' tfree cfree runFree nm = 
+  concat <$> sequenceA 
+    [ deriveFreeInstance' tfree cfree runFree nm
+    , deriveInstance showDeriv [t|$clss ShowsPrec|]
+    , deriveInstance apDeriv [t|forall f a c. (Applicative f, $clss a) => $clss (Ap f a)|]
+    ]
   where
     clss = pure $ ConT nm
 

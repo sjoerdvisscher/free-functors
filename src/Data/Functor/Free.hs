@@ -59,7 +59,7 @@ import Control.Comonad
 
 import Language.Haskell.TH.Syntax
 import Data.Functor.Free.Internal
-import Data.DeriveLiftedInstances (ShowsPrec(..))
+import Data.DeriveLiftedInstances (ShowsPrec(..), deriveInstance, apDeriv)
 
 
 -- | The free functor for class @c@.
@@ -165,8 +165,7 @@ initial = rightAdjunct absurd
 deriveFreeInstance :: Name -> Q [Dec]
 deriveFreeInstance = deriveFreeInstance' ''Free 'Free 'runFree
 
--- | Derive the instance of @`Free` c a@ for the class @c@.
--- This also derives the instance of @ShowsPrec@ for the class @c@, which is needed for the @Show@ instance of @Free@.
+--- | Derive the instances of @`Free` c a@ for the class @c@, `Show`, `Foldable` and `Traversable`.
 -- 
 -- For example:
 --
@@ -180,4 +179,5 @@ deriveFreeInstance' ''Free 'Free 'runFree ''Floating
 deriveFreeInstance' ''Free 'Free 'runFree ''Semigroup
 deriveFreeInstance' ''Free 'Free 'runFree ''Monoid
 
-    
+deriveInstance apDeriv [t|forall f a c. (Applicative f, Fractional a) => Fractional (Ap f a)|]
+deriveInstance apDeriv [t|forall f a c. (Applicative f, Floating a) => Floating (Ap f a)|]
