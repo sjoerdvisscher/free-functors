@@ -1,6 +1,7 @@
 {-# OPTIONS_GHC -fno-warn-orphans -fno-warn-unused-matches #-}
 {-# LANGUAGE
-    RankNTypes
+    GADTs
+  , RankNTypes
   , TypeFamilies
   , TypeOperators
   , DeriveFunctor
@@ -9,6 +10,7 @@
   , TemplateHaskell
   , DeriveTraversable
   , FlexibleInstances
+  , ScopedTypeVariables
   , UndecidableInstances
   , QuantifiedConstraints
   , MultiParamTypeClasses
@@ -35,6 +37,7 @@ module Data.Functor.Free (
   , counit
   , leftAdjunct
   , transform
+  , mapClass
   , unfold
   , convert
   , convertClosed
@@ -56,6 +59,7 @@ import Data.Monoid (Ap(..))
 import Data.Void
 import Data.Traversable
 import Control.Comonad
+import Data.Constraint ((:-)(..), Dict(..))
 
 import Language.Haskell.TH.Syntax
 import Data.Functor.Free.Internal
@@ -91,6 +95,12 @@ leftAdjunct f = f . unit
 transform :: (forall r. c r => (b -> r) -> a -> r) -> Free c a -> Free c b
 transform t (Free f) = Free (f . t)
 
+-- | `Free` is a contravariant functor in its constraint parameter.
+mapClass :: forall b c d. (forall a. d a :- c a) -> Free c b -> Free d b
+mapClass h (Free f) = Free (w h)
+  where
+    w :: d a => d a :- c a -> (b -> a) -> a
+    w h = case h of Sub Dict -> f
 
 instance Functor (Free c) where
   fmap f = transform (. f)
@@ -110,7 +120,7 @@ instance (forall f x. Applicative f => c (Ap f (Free c x))) => Traversable (Free
   traverse f = getAp . rightAdjunct (Ap . fmap unit . f)
 
 instance (Show a, c ShowsPrec) => Show (Free c a) where
-  showsPrec p = showsPrec p . rightAdjunct (\a -> ShowsPrec $ \d -> showParen (d > 10) $ showString "pure " . showsPrec 11 a)
+  showsPrec p = showsPrec p . rightAdjunct (\a -> ShowsPrec $ \d -> showParen (d > 10) $ showString "unit " . showsPrec 11 a)
 
   
 newtype Extract a = Extract { getExtract :: a }
@@ -179,5 +189,5 @@ deriveFreeInstance' ''Free 'Free 'runFree ''Floating
 deriveFreeInstance' ''Free 'Free 'runFree ''Semigroup
 deriveFreeInstance' ''Free 'Free 'runFree ''Monoid
 
-deriveInstance apDeriv [t|forall f a c. (Applicative f, Fractional a) => Fractional (Ap f a)|]
-deriveInstance apDeriv [t|forall f a c. (Applicative f, Floating a) => Floating (Ap f a)|]
+deriveInstance apDeriv [t|forall f a. (Applicative f, Fractional a) => Fractional (Ap f a)|]
+deriveInstance apDeriv [t|forall f a. (Applicative f, Floating a) => Floating (Ap f a)|]

@@ -51,7 +51,8 @@ Library
     derive-lifted-instances == 0,
     contravariant == 1.5.*,
     bifunctors == 5.*,
-    profunctors == 5.*
+    profunctors == 5.*,
+    constraints == 0.11.*
 
 
 source-repository head

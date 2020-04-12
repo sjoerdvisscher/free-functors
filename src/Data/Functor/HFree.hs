@@ -32,6 +32,7 @@ import Data.Functor.Contravariant
 import Data.Functor.Contravariant.Divisible
 
 import Language.Haskell.TH.Syntax (Q, Name, Dec)
+import Data.DeriveLiftedInstances
 import Data.Functor.Free.Internal
 
 -- | Natural transformations.
@@ -79,6 +80,10 @@ iter f = runIdentity . rightAdjunct (Identity . f)
 wrap :: f (HFree Monad f a) -> HFree Monad f a
 wrap as = unit as >>= id
 
+instance (Show a, forall x. Show (f x), c ShowsPrec1) => Show (HFree c f a) where
+  showsPrec p = showsPrec p . rightAdjunct (\a -> ShowsPrec1 $ ShowsPrec $ \d -> showParen (d > 10) $ showString "unit " . showsPrec 11 a)
+
+instance Show (a -> b) where show _ = "f"
 
 -- | Derive the instance of @`HFree` c f a@ for the class @c@,.
 --
