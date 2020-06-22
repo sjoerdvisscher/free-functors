@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, TypeFamilies, DeriveFunctor, DeriveFoldable, DeriveTraversable, FlexibleInstances, UndecidableInstances #-}
+{-# LANGUAGE TypeFamilies, FlexibleInstances, UndecidableInstances #-}
 module NonEmptyList where
 
 import Data.Functor.Free

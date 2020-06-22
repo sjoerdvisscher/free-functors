@@ -26,6 +26,7 @@
 module Data.Functor.HFree where
 
 import Control.Applicative
+import Control.Monad (join)
 import Control.Monad.Trans.Class
 import Data.Functor.Identity
 import Data.Functor.Contravariant
@@ -39,6 +40,16 @@ type f :~> g = forall b. f b -> g b
 
 -- | The higher order free functor for constraint @c@.
 newtype HFree c f a = HFree { runHFree :: forall g. c g => (f :~> g) -> g a }
+
+
+-- | Derive the instance of @`HFree` c f a@ for the class @c@,.
+--
+-- For example:
+--
+-- @deriveHFreeInstance ''Functor@
+deriveHFreeInstance :: Name -> Q [Dec]
+deriveHFreeInstance = deriveFreeInstance' ''HFree 'HFree 'runHFree
+
 
 unit :: f :~> HFree c f
 unit fa = HFree $ \k -> k fa
@@ -59,7 +70,7 @@ transform t h = HFree $ \k -> rightAdjunct (t k) h
 -- transform t = HFree . (. t) . runHFree
 
 hfmap :: (f :~> g) -> HFree c f :~> HFree c g
-hfmap f = transform (\k -> k . f)
+hfmap f = transform (. f)
 
 bind :: (f :~> HFree c g) -> HFree c f :~> HFree c g
 bind f = transform (\k -> rightAdjunct k . f)
@@ -77,16 +88,8 @@ iter :: c Identity => (forall b. f b -> b) -> HFree c f a -> a
 iter f = runIdentity . rightAdjunct (Identity . f)
 
 wrap :: f (HFree Monad f a) -> HFree Monad f a
-wrap as = unit as >>= id
+wrap as = join (unit as)
 
-
--- | Derive the instance of @`HFree` c f a@ for the class @c@,.
---
--- For example:
---
--- @deriveHFreeInstance ''Functor@
-deriveHFreeInstance :: Name -> Q [Dec]
-deriveHFreeInstance = deriveFreeInstance' ''HFree 'HFree 'runHFree
 
 deriveFreeInstance' ''HFree 'HFree 'runHFree ''Functor
 deriveFreeInstance' ''HFree 'HFree 'runHFree ''Applicative

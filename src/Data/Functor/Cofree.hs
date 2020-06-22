@@ -34,7 +34,7 @@ counit :: Cofree c b -> b
 counit (Cofree k a) = k a
 
 leftAdjunct :: c a => (a -> b) -> a -> Cofree c b
-leftAdjunct f a = Cofree f a
+leftAdjunct = Cofree
 
 -- | @unit = leftAdjunct id@
 unit :: c b => b -> Cofree c b

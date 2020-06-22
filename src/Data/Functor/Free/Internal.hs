@@ -1,6 +1,7 @@
 {-# LANGUAGE
     GADTs
   , RankNTypes
+  , ViewPatterns
   , TypeOperators
   , DeriveFunctor
   , DeriveFoldable
@@ -29,27 +30,24 @@ kPat :: Q Pat
 kPat = pure . VarP $ mkName "k"
 
 freeDeriv :: Name -> Name -> Derivator
-freeDeriv free runFree = noopDeriv {
-  run = \e -> [|$(pure $ ConE free) $ \ $kPat -> $e|],
-  var = \v -> [|$(pure $ VarE runFree) $v $kExp|],
-  over = \v -> [|fmap (\a -> $(pure $ VarE runFree) a $kExp) $v|]
+freeDeriv (pure . ConE -> free) (pure . VarE -> runFree) = idDeriv {
+  res = \e -> [| $free (\ $kPat -> $e) |],
+  var = \fold v -> [| $(fold [| fmap |] [| \f -> $runFree f $kExp |]) $v |]
 }
 
 deriveFreeInstance' :: Name -> Name -> Name -> Name -> Q [Dec]
-deriveFreeInstance' tfree cfree runFree nm = deriveInstance (freeDeriv cfree runFree) [t|forall a c. (forall x. c x :=> $clss x) => $clss ($free c a)|]
-  where
-    clss = pure $ ConT nm
-    free = pure $ ConT tfree
+deriveFreeInstance' (pure . ConT -> free) cfree runFree (pure . ConT -> clss)
+  = deriveInstance
+      (freeDeriv cfree runFree)
+      [t| forall a c. (forall x. c x :=> $clss x) => $clss ($free c a) |]
 
 deriveInstances' :: Name -> Name -> Name -> Name -> Q [Dec]
-deriveInstances' tfree cfree runFree nm = 
-  concat <$> sequenceA 
+deriveInstances' tfree cfree runFree nm@(pure . ConT -> clss) =
+  concat <$> sequenceA
     [ deriveFreeInstance' tfree cfree runFree nm
-    , deriveInstance showDeriv [t|$clss ShowsPrec|]
-    , deriveInstance apDeriv [t|forall f a c. (Applicative f, $clss a) => $clss (Ap f a)|]
+    , deriveInstance showDeriv [t| $clss ShowsPrec |]
+    , deriveInstance (apDeriv idDeriv) [t| forall f a c. (Applicative f, $clss a) => $clss (Ap f a) |]
     ]
-  where
-    clss = pure $ ConT nm
 
 class (a => b) => a :=> b
 instance (a => b) => a :=> b

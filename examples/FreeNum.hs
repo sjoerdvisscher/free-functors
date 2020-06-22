@@ -1,4 +1,4 @@
-{-# LANGUAGE TemplateHaskell, TypeFamilies, DeriveFunctor, DeriveFoldable, DeriveTraversable, FlexibleInstances #-}
+{-# LANGUAGE TypeFamilies, FlexibleInstances, LambdaCase #-}
 module FreeNum where
 
 import Data.Functor.Free
@@ -17,7 +17,7 @@ expr = 1 + x * (3 - y)
 
 -- Monadic bind is variable substitution
 subst :: Free Num String -> Free Num a
-subst e = e >>= \v -> case v of 
+subst e = e >>= \case
   "x" -> 10
   _   -> 2
 

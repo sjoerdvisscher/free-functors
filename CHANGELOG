@@ -1,5 +1,17 @@
 CHANGELOG
 
+1.0.1 -> 1.1
+  - Use derive-lifted-instances i/o algebraic-classes
+  - Add deriving instances for `HFree` and `HHFree`
+  - Fix `Traversable` and `Foldable` instances of `Free`
+
+1.0 -> 1.0.1
+  - Simpler `ShowHelper`
+
+0.8.4 -> 1.0
+  - Switch to using the QuantifiedConstraints extension
+  - Removed Data.Constraint.Class1
+
 0.8.3 -> 0.8.4
   - Updated to constraints-0.10
   - Updated for GHC 8.4
@@ -9,16 +21,16 @@ CHANGELOG
 
 0.8.2 -> 0.8.3
   - Added Data.Functor.Free.TH to other-modules
-  
+
 0.8.1 -> 0.8.2
   - Support for `deriveInstances` for classes which have one or more superclasses
   - `deriveInstances` now also derives the `HasSuperClasses` instance
   - Expose internal `ShowHelper` datatype
-  
+
 0.8 -> 0.8.1
   - Added HHCofree
   - Changes towards support for `SuperClass1` in TH code for `Free`
-  
+
 0.7.2 -> 0.8
   - Updated for GHC 8.2
     - Updated to base-4.10

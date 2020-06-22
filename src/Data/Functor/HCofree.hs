@@ -41,7 +41,7 @@ counit :: HCofree c g :~> g
 counit (HCofree k fa) = k fa
 
 leftAdjunct :: c f => (f :~> g) -> f :~> HCofree c g
-leftAdjunct k fa = HCofree k fa
+leftAdjunct = HCofree
 
 -- | @unit = leftAdjunct id@
 unit :: c g => g :~> HCofree c g
@@ -55,7 +55,7 @@ transform :: (forall r. c r => (r :~> f) -> r :~> g) -> HCofree c f :~> HCofree 
 transform t (HCofree k a) = HCofree (t k) a
 
 hfmap :: (f :~> g) -> HCofree c f :~> HCofree c g
-hfmap f = transform (\k -> f . k)
+hfmap f = transform (f .)
 
 hextend :: (HCofree c f :~> g) -> HCofree c f :~> HCofree c g
 hextend f = transform (\k -> f . leftAdjunct k)
@@ -81,6 +81,7 @@ instance (forall x. c x => Functor x) => Functor (HCofree c g) where
 
 instance (forall x. c x => Foldable x) => Foldable (HCofree c g) where
   foldMap f (HCofree _ a) = foldMap f a
+  foldMap' f (HCofree _ a) = foldMap' f a
   fold (HCofree _ a) = fold a
   foldr f z (HCofree _ a) = foldr f z a
   foldl f z (HCofree _ a) = foldl f z a

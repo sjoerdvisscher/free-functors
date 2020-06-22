@@ -48,7 +48,7 @@ counit :: HHCofree c g :~~> g
 counit (HHCofree k fa) = k fa
 
 leftAdjunct :: c f => (f :~~> g) -> f :~~> HHCofree c g
-leftAdjunct k fa = HHCofree k fa
+leftAdjunct = HHCofree
 
 -- | @unit = leftAdjunct id@
 unit :: c g => g :~~> HHCofree c g
@@ -62,7 +62,7 @@ transform :: (forall r. c r => (r :~~> f) -> r :~~> g) -> HHCofree c f :~~> HHCo
 transform t (HHCofree k a) = HHCofree (t k) a
 
 hfmap :: (f :~~> g) -> HHCofree c f :~~> HHCofree c g
-hfmap f = transform (\k -> f . k)
+hfmap f = transform (f .)
 
 hextend :: (HHCofree c f :~~> g) -> HHCofree c f :~~> HHCofree c g
 hextend f = transform (\k -> f . leftAdjunct k)
@@ -74,7 +74,7 @@ instance BifunctorFunctor (HHCofree c) where
 instance BifunctorComonad (HHCofree c) where
   biextract = counit
   biextend = hextend
-  
+
 instance ProfunctorFunctor (HHCofree c) where
   promap = hfmap
 
@@ -87,21 +87,21 @@ instance (forall x. c x => Bifunctor x) => Bifunctor (HHCofree c g) where
   bimap f g (HHCofree k a) = HHCofree k (bimap f g a)
   first f (HHCofree k a) = HHCofree k (first f a)
   second f (HHCofree k a) = HHCofree k (second f a)
-      
+
 instance (forall x. c x => Profunctor x) => Profunctor (HHCofree c g) where
   dimap f g (HHCofree k a) = HHCofree k (dimap f g a)
   lmap f (HHCofree k a) = HHCofree k (lmap f a)
   rmap f (HHCofree k a) = HHCofree k (rmap f a)
   f #. HHCofree k g = HHCofree k (f #. g)
   HHCofree k g .# f = HHCofree k (g .# f)
-      
+
 instance (forall x. c x => Strong x) => Strong (HHCofree c f) where
   first' (HHCofree k a) = HHCofree k (first' a)
   second' (HHCofree k a) = HHCofree k (second' a)
-      
+
 instance (forall x. c x => Choice x) => Choice (HHCofree c f) where
   left' (HHCofree k a) = HHCofree k (left' a)
   right' (HHCofree k a) = HHCofree k (right' a)
-      
+
 instance (forall x. c x => Closed x) => Closed (HHCofree c f) where
   closed (HHCofree k a) = HHCofree k (closed a)

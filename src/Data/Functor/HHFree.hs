@@ -43,6 +43,16 @@ type f :~~> g = forall a b. f a b -> g a b
 -- | The higher order free functor over two type parameters for constraint @c@.
 newtype HHFree c f a b = HHFree { runHHFree :: forall g. c g => (f :~~> g) -> g a b }
 
+
+-- | Derive the instance of @`HHFree` c f a b@ for the class @c@,.
+--
+-- For example:
+--
+-- @deriveHHFreeInstance ''Category@
+deriveHHFreeInstance :: Name -> Q [Dec]
+deriveHHFreeInstance = deriveFreeInstance' ''HHFree 'HHFree 'runHHFree
+
+
 unit :: f :~~> HHFree c f
 unit fa = HHFree $ \k -> k fa
 
@@ -62,7 +72,7 @@ transform t h = HHFree $ \k -> rightAdjunct (t k) h
 -- transform t = HHFree . (. t) . runHHFree
 
 hfmap :: (f :~~> g) -> HHFree c f :~~> HHFree c g
-hfmap f = transform (\k -> k . f)
+hfmap f = transform (. f)
 
 bind :: (f :~~> HHFree c g) -> HHFree c f :~~> HHFree c g
 bind f = transform (\k -> rightAdjunct k . f)
@@ -81,14 +91,6 @@ instance ProfunctorMonad (HHFree c) where
   proreturn = unit
   projoin = bind id
 
-
--- | Derive the instance of @`HHFree` c f a b@ for the class @c@,.
---
--- For example:
---
--- @deriveHHFreeInstance ''Category@
-deriveHHFreeInstance :: Name -> Q [Dec]
-deriveHHFreeInstance = deriveFreeInstance' ''HHFree 'HHFree 'runHHFree
 
 deriveFreeInstance' ''HHFree 'HHFree 'runHHFree ''Category
 deriveFreeInstance' ''HHFree 'HHFree 'runHHFree ''Arrow

@@ -59,7 +59,7 @@ import Control.Comonad
 
 import Language.Haskell.TH.Syntax
 import Data.Functor.Free.Internal
-import Data.DeriveLiftedInstances (ShowsPrec(..), deriveInstance, apDeriv)
+import Data.DeriveLiftedInstances (ShowsPrec(..), deriveInstance, apDeriv, idDeriv)
 
 
 -- | The free functor for class @c@.
@@ -112,7 +112,7 @@ instance (forall f x. Applicative f => c (Ap f (Free c x))) => Traversable (Free
 instance (Show a, c ShowsPrec) => Show (Free c a) where
   showsPrec p = showsPrec p . rightAdjunct (\a -> ShowsPrec $ \d -> showParen (d > 10) $ showString "pure " . showsPrec 11 a)
 
-  
+
 newtype Extract a = Extract { getExtract :: a }
 newtype Duplicate f a = Duplicate { getDuplicate :: f (f a) }
 instance (forall x. c (Extract x), forall x. c (Duplicate (Free c) x))
@@ -166,7 +166,7 @@ deriveFreeInstance :: Name -> Q [Dec]
 deriveFreeInstance = deriveFreeInstance' ''Free 'Free 'runFree
 
 --- | Derive the instances of @`Free` c a@ for the class @c@, `Show`, `Foldable` and `Traversable`.
--- 
+--
 -- For example:
 --
 -- @deriveInstances ''Num@
@@ -179,5 +179,5 @@ deriveFreeInstance' ''Free 'Free 'runFree ''Floating
 deriveFreeInstance' ''Free 'Free 'runFree ''Semigroup
 deriveFreeInstance' ''Free 'Free 'runFree ''Monoid
 
-deriveInstance apDeriv [t|forall f a c. (Applicative f, Fractional a) => Fractional (Ap f a)|]
-deriveInstance apDeriv [t|forall f a c. (Applicative f, Floating a) => Floating (Ap f a)|]
+deriveInstance (apDeriv idDeriv) [t|forall f a c. (Applicative f, Fractional a) => Fractional (Ap f a)|]
+deriveInstance (apDeriv idDeriv) [t|forall f a c. (Applicative f, Floating a) => Floating (Ap f a)|]
