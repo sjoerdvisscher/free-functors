@@ -1,5 +1,6 @@
 {-# LANGUAGE
     GADTs
+  , PolyKinds
   , RankNTypes
   , ViewPatterns
   , TypeOperators
@@ -39,7 +40,7 @@ deriveFreeInstance' :: Name -> Name -> Name -> Name -> Q [Dec]
 deriveFreeInstance' (pure . ConT -> free) cfree runFree (pure . ConT -> clss)
   = deriveInstance
       (freeDeriv cfree runFree)
-      [t| forall a c. (forall x. c x :=> $clss x) => $clss ($free c a) |]
+      [t| forall a c. (c ~=> $clss) => $clss ($free c a) |]
 
 deriveInstances' :: Name -> Name -> Name -> Name -> Q [Dec]
 deriveInstances' tfree cfree runFree nm@(pure . ConT -> clss) =
@@ -51,3 +52,5 @@ deriveInstances' tfree cfree runFree nm@(pure . ConT -> clss) =
 
 class (a => b) => a :=> b
 instance (a => b) => a :=> b
+
+type a ~=> b = forall x. a x :=> b x

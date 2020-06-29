@@ -1,10 +1,14 @@
 {-# LANGUAGE
     MultiParamTypeClasses
   , FlexibleInstances
+  , TemplateHaskell
+  , RankNTypes
   #-}
 module Automaton where
 
 import Data.Functor.Cofree
+import Data.Functor.Cofree.Internal
+import Data.DeriveLiftedInstances
 
 import Control.Comonad
 import Data.Functor.Identity
@@ -16,9 +20,7 @@ class Action i s where
 
 type Automaton i = Cofree (Action i)
 
-
-instance Action i (Automaton i o) where
-  act i (Cofree k s) = Cofree k (act i s)
+deriveInstance (cofreeDeriv 'Cofree) [t| forall a i. Action i (Automaton i a) |]
 
 instance Action i (Identity a) where
   act _ = id

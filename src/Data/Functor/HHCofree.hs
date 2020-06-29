@@ -2,6 +2,7 @@
     GADTs
   , RankNTypes
   , TypeOperators
+  , TemplateHaskell
   , ConstraintKinds
   , FlexibleContexts
   , FlexibleInstances
@@ -32,8 +33,10 @@ import Control.Category
 import Data.Bifunctor
 import Data.Bifunctor.Functor
 import Data.Profunctor
-import Data.Profunctor.Unsafe
 import Data.Profunctor.Monad
+
+import Language.Haskell.TH.Syntax
+import Data.Functor.Cofree.Internal
 
 
 -- | Natural transformations.
@@ -42,6 +45,15 @@ type f :~~> g = forall c d. f c d -> g c d
 -- | The higher order cofree functor for constraint @c@.
 data HHCofree c g a b where
   HHCofree :: c f => (f :~~> g) -> f a b -> HHCofree c g a b
+
+
+-- | Derive the instance of @`HHCofree` c a@ for the class @c@.
+--
+-- For example:
+--
+-- @deriveHHCofreeInstance ''Profunctor@
+deriveHHCofreeInstance :: Name -> Q [Dec]
+deriveHHCofreeInstance = deriveCofreeInstance' ''HHCofree 'HHCofree
 
 
 counit :: HHCofree c g :~~> g
@@ -83,25 +95,8 @@ instance ProfunctorComonad (HHCofree c) where
   produplicate = hextend id
 
 
-instance (forall x. c x => Bifunctor x) => Bifunctor (HHCofree c g) where
-  bimap f g (HHCofree k a) = HHCofree k (bimap f g a)
-  first f (HHCofree k a) = HHCofree k (first f a)
-  second f (HHCofree k a) = HHCofree k (second f a)
-
-instance (forall x. c x => Profunctor x) => Profunctor (HHCofree c g) where
-  dimap f g (HHCofree k a) = HHCofree k (dimap f g a)
-  lmap f (HHCofree k a) = HHCofree k (lmap f a)
-  rmap f (HHCofree k a) = HHCofree k (rmap f a)
-  f #. HHCofree k g = HHCofree k (f #. g)
-  HHCofree k g .# f = HHCofree k (g .# f)
-
-instance (forall x. c x => Strong x) => Strong (HHCofree c f) where
-  first' (HHCofree k a) = HHCofree k (first' a)
-  second' (HHCofree k a) = HHCofree k (second' a)
-
-instance (forall x. c x => Choice x) => Choice (HHCofree c f) where
-  left' (HHCofree k a) = HHCofree k (left' a)
-  right' (HHCofree k a) = HHCofree k (right' a)
-
-instance (forall x. c x => Closed x) => Closed (HHCofree c f) where
-  closed (HHCofree k a) = HHCofree k (closed a)
+deriveCofreeInstance' ''HHCofree 'HHCofree ''Bifunctor
+deriveCofreeInstance' ''HHCofree 'HHCofree ''Profunctor
+deriveCofreeInstance' ''HHCofree 'HHCofree ''Strong
+deriveCofreeInstance' ''HHCofree 'HHCofree ''Choice
+deriveCofreeInstance' ''HHCofree 'HHCofree ''Closed

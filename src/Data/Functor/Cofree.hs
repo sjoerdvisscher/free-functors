@@ -1,6 +1,7 @@
 {-# LANGUAGE
     ConstraintKinds
   , GADTs
+  , TemplateHaskell
   , UndecidableInstances
   , QuantifiedConstraints
   #-}
@@ -24,10 +25,18 @@ import Control.Comonad
 import Data.Functor.Identity
 import Data.Functor.Compose
 
+import Language.Haskell.TH.Syntax
+import Data.Functor.Cofree.Internal
+
 
 -- | The cofree functor for constraint @c@.
 data Cofree c b where
   Cofree :: c a => (a -> b) -> a -> Cofree c b
+
+
+-- | Derive the instance of @`Cofree` c a@ for the class @c@.
+deriveCofreeInstance :: Name -> Q [Dec]
+deriveCofreeInstance = deriveCofreeInstance' ''Cofree 'Cofree
 
 
 counit :: Cofree c b -> b

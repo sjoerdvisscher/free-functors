@@ -1,5 +1,13 @@
 CHANGELOG
 
+1.1.1 -> 1.1.2
+  - Update to derive-lifted-instances v0.2
+  - Add deriving instances for `Cofree`, `HCofree` and `HHCofree`
+  - Added `~=>` type, as suggested by Iceland Jack.
+
+1.1 -> 1.1.1
+  - Update to derive-lifted-instances v0.1
+
 1.0.1 -> 1.1
   - Use derive-lifted-instances i/o algebraic-classes
   - Add deriving instances for `HFree` and `HHFree`
