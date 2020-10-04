@@ -1,6 +1,6 @@
-{-# LANGUAGE TemplateHaskell, UndecidableInstances, QuantifiedConstraints, FlexibleInstances #-}
+{-# LANGUAGE TemplateHaskell, UndecidableInstances, QuantifiedConstraints, ConstraintKinds, FlexibleInstances #-}
 module Sem where
-  
+
 import Data.Functor.Free
 
 class BaseSem a where

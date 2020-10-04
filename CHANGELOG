@@ -1,5 +1,9 @@
 CHANGELOG
 
+1.1.2 -> 1.2
+  - Add support for GHC 9.0, drop GHC 8.8
+  - Update to derive-lifted-instances v0.2.2
+
 1.1.1 -> 1.1.2
   - Update to derive-lifted-instances v0.2
   - Add deriving instances for `Cofree`, `HCofree` and `HHCofree`

@@ -72,7 +72,7 @@ transform t h = HHFree $ \k -> rightAdjunct (t k) h
 -- transform t = HHFree . (. t) . runHHFree
 
 hfmap :: (f :~~> g) -> HHFree c f :~~> HHFree c g
-hfmap f = transform (. f)
+hfmap f = transform (\g -> g . f)
 
 bind :: (f :~~> HHFree c g) -> HHFree c f :~~> HHFree c g
 bind f = transform (\k -> rightAdjunct k . f)
@@ -99,8 +99,8 @@ deriveFreeInstance' ''HHFree 'HHFree 'runHHFree ''ArrowPlus
 deriveFreeInstance' ''HHFree 'HHFree 'runHHFree ''ArrowChoice
 deriveFreeInstance' ''HHFree 'HHFree 'runHHFree ''ArrowLoop
 
-instance (forall x. c x => ArrowApply x) => ArrowApply (HHFree c f) where
-  app = HHFree $ \k -> app . arr (first (rightAdjunct k))
+instance (c ~=> ArrowApply, c (HHFree c f)) => ArrowApply (HHFree c f) where
+  app = HHFree $ \k -> app . arr (\(a, b) -> (rightAdjunct k a, b))
 
 deriveFreeInstance' ''HHFree 'HHFree 'runHHFree ''Bifunctor
 deriveFreeInstance' ''HHFree 'HHFree 'runHHFree ''Biapplicative

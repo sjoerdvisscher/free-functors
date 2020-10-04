@@ -60,7 +60,7 @@ counit :: HHCofree c g :~~> g
 counit (HHCofree k fa) = k fa
 
 leftAdjunct :: c f => (f :~~> g) -> f :~~> HHCofree c g
-leftAdjunct = HHCofree
+leftAdjunct f = HHCofree f
 
 -- | @unit = leftAdjunct id@
 unit :: c g => g :~~> HHCofree c g
@@ -74,7 +74,7 @@ transform :: (forall r. c r => (r :~~> f) -> r :~~> g) -> HHCofree c f :~~> HHCo
 transform t (HHCofree k a) = HHCofree (t k) a
 
 hfmap :: (f :~~> g) -> HHCofree c f :~~> HHCofree c g
-hfmap f = transform (f .)
+hfmap f = transform (\g -> f . g)
 
 hextend :: (HHCofree c f :~~> g) -> HHCofree c f :~~> HHCofree c g
 hextend f = transform (\k -> f . leftAdjunct k)

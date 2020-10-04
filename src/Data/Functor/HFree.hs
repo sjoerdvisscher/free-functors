@@ -41,6 +41,12 @@ type f :~> g = forall b. f b -> g b
 -- | The higher order free functor for constraint @c@.
 newtype HFree c f a = HFree { runHFree :: forall g. c g => (f :~> g) -> g a }
 
+-- | The free monad of a functor.
+instance (c ~=> Monad, c (HFree c f)) => Monad (HFree c f) where
+  return = pure
+  HFree f >>= g = HFree $ \k -> f k >>= rightAdjunct k . g
+  HFree f >> HFree g = HFree $ \k -> f k >> g k
+
 
 -- | Derive the instance of @`HFree` c f a@ for the class @c@,.
 --
@@ -49,7 +55,6 @@ newtype HFree c f a = HFree { runHFree :: forall g. c g => (f :~> g) -> g a }
 -- @deriveHFreeInstance ''Functor@
 deriveHFreeInstance :: Name -> Q [Dec]
 deriveHFreeInstance = deriveFreeInstance' ''HFree 'HFree 'runHFree
-
 
 unit :: f :~> HFree c f
 unit fa = HFree $ \k -> k fa
@@ -70,7 +75,7 @@ transform t h = HFree $ \k -> rightAdjunct (t k) h
 -- transform t = HFree . (. t) . runHFree
 
 hfmap :: (f :~> g) -> HFree c f :~> HFree c g
-hfmap f = transform (. f)
+hfmap f = transform (\g -> g . f)
 
 bind :: (f :~> HFree c g) -> HFree c f :~> HFree c g
 bind f = transform (\k -> rightAdjunct k . f)
@@ -94,9 +99,6 @@ wrap as = join (unit as)
 deriveFreeInstance' ''HFree 'HFree 'runHFree ''Functor
 deriveFreeInstance' ''HFree 'HFree 'runHFree ''Applicative
 deriveFreeInstance' ''HFree 'HFree 'runHFree ''Alternative
-
--- | The free monad of a functor.
-deriveFreeInstance' ''HFree 'HFree 'runHFree ''Monad
 
 -- HFree Monad is only a monad transformer if rightAdjunct is called with monad morphisms.
 -- F.e. lift . return == return fails if the results are inspected with rightAdjunct (const Nothing).

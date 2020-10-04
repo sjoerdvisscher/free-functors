@@ -15,6 +15,7 @@
   , QuantifiedConstraints
   , MultiParamTypeClasses
   , UndecidableSuperClasses
+  , StandaloneKindSignatures
   #-}
 module Data.Functor.Free.Internal where
 
@@ -22,6 +23,7 @@ import Data.Monoid (Ap(..))
 
 import Language.Haskell.TH.Syntax
 import Data.DeriveLiftedInstances
+import Data.Kind (Constraint)
 
 
 kExp :: Q Exp
@@ -40,7 +42,7 @@ deriveFreeInstance' :: Name -> Name -> Name -> Name -> Q [Dec]
 deriveFreeInstance' (pure . ConT -> free) cfree runFree (pure . ConT -> clss)
   = deriveInstance
       (freeDeriv cfree runFree)
-      [t| forall a c. (c ~=> $clss) => $clss ($free c a) |]
+      [t| forall a c. (c ~=> $clss, c ($free c a)) => $clss ($free c a) |]
 
 deriveInstances' :: Name -> Name -> Name -> Name -> Q [Dec]
 deriveInstances' tfree cfree runFree nm@(pure . ConT -> clss) =
@@ -50,7 +52,5 @@ deriveInstances' tfree cfree runFree nm@(pure . ConT -> clss) =
     , deriveInstance (apDeriv idDeriv) [t| forall f a c. (Applicative f, $clss a) => $clss (Ap f a) |]
     ]
 
-class (a => b) => a :=> b
-instance (a => b) => a :=> b
-
-type a ~=> b = forall x. a x :=> b x
+type (~=>) :: (k -> Constraint) -> (k -> Constraint) -> Constraint
+type a ~=> b = forall x. a x => b x

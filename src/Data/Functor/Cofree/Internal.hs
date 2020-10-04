@@ -15,6 +15,7 @@
   , QuantifiedConstraints
   , MultiParamTypeClasses
   , UndecidableSuperClasses
+  , StandaloneKindSignatures
   #-}
 module Data.Functor.Cofree.Internal where
 
@@ -22,6 +23,7 @@ import Data.Monoid (Ap(..))
 
 import Language.Haskell.TH.Syntax
 import Data.DeriveLiftedInstances
+import Data.Kind (Constraint)
 
 
 kExp :: Q Exp
@@ -41,9 +43,7 @@ cofreeDeriv cofree = idDeriv {
 deriveCofreeInstance' :: Name -> Name -> Name -> Q [Dec]
 deriveCofreeInstance' (pure . ConT -> cofree) ccofree (pure . ConT -> clss)
   = deriveInstance (cofreeDeriv ccofree)
-      [t| forall a c. (c ~=> $clss) => $clss ($cofree c a) |]
+      [t| forall a c. (c ~=> $clss, c ($cofree c a)) => $clss ($cofree c a) |]
 
-class (a => b) => a :=> b
-instance (a => b) => a :=> b
-
-type a ~=> b = forall x. a x :=> b x
+type (~=>) :: (k -> Constraint) -> (k -> Constraint) -> Constraint
+type a ~=> b = forall x. a x => b x

@@ -40,6 +40,12 @@ type f :~> g = forall b. f b -> g b
 data HCofree c g a where
   HCofree :: c f => (f :~> g) -> f a -> HCofree c g a
 
+-- | The cofree comonad of a functor.
+instance (c ~=> Comonad, c (HCofree c g)) => Comonad (HCofree c g) where
+  extract (HCofree _ a) = extract a
+  extend f (HCofree k a) = HCofree k $ extend (f . HCofree k) a
+  duplicate (HCofree k a) = HCofree k $ extend (HCofree k) a
+
 
 -- | Derive the instance of @`HCofree` c a@ for the class @c@.
 --
@@ -54,7 +60,7 @@ counit :: HCofree c g :~> g
 counit (HCofree k fa) = k fa
 
 leftAdjunct :: c f => (f :~> g) -> f :~> HCofree c g
-leftAdjunct = HCofree
+leftAdjunct f = HCofree f
 
 -- | @unit = leftAdjunct id@
 unit :: c g => g :~> HCofree c g
@@ -68,7 +74,7 @@ transform :: (forall r. c r => (r :~> f) -> r :~> g) -> HCofree c f :~> HCofree 
 transform t (HCofree k a) = HCofree (t k) a
 
 hfmap :: (f :~> g) -> HCofree c f :~> HCofree c g
-hfmap f = transform (f .)
+hfmap f = transform (\g -> f . g)
 
 hextend :: (HCofree c f :~> g) -> HCofree c f :~> HCofree c g
 hextend f = transform (\k -> f . leftAdjunct k)
@@ -91,9 +97,3 @@ unwrap = counit . duplicate
 deriveCofreeInstance' ''HCofree 'HCofree ''Functor
 deriveCofreeInstance' ''HCofree 'HCofree ''Foldable
 deriveCofreeInstance' ''HCofree 'HCofree ''Traversable
-
--- | The cofree comonad of a functor.
-instance (c ~=> Comonad) => Comonad (HCofree c g) where
-  extract (HCofree _ a) = extract a
-  extend f (HCofree k a) = HCofree k $ extend (f . HCofree k) a
-  duplicate (HCofree k a) = HCofree k $ extend (HCofree k) a
