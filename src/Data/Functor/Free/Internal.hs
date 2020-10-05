@@ -1,5 +1,6 @@
 {-# LANGUAGE
-    GADTs
+    CPP
+  , GADTs
   , PolyKinds
   , RankNTypes
   , ViewPatterns
@@ -15,8 +16,10 @@
   , QuantifiedConstraints
   , MultiParamTypeClasses
   , UndecidableSuperClasses
-  , StandaloneKindSignatures
   #-}
+#if __GLASGOW_HASKELL__ >= 810
+{-# LANGUAGE StandaloneKindSignatures #-}
+#endif
 module Data.Functor.Free.Internal where
 
 import Data.Monoid (Ap(..))
@@ -52,5 +55,9 @@ deriveInstances' tfree cfree runFree nm@(pure . ConT -> clss) =
     , deriveInstance (apDeriv idDeriv) [t| forall f a c. (Applicative f, $clss a) => $clss (Ap f a) |]
     ]
 
+#if __GLASGOW_HASKELL__ < 810
+type a ~=> b = (forall x. (a :: (k -> Constraint)) x => (b :: (k -> Constraint)) x) :: Constraint
+#else
 type (~=>) :: (k -> Constraint) -> (k -> Constraint) -> Constraint
 type a ~=> b = forall x. a x => b x
+#endif

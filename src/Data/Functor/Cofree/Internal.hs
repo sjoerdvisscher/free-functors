@@ -1,5 +1,6 @@
 {-# LANGUAGE
-    GADTs
+    CPP
+  , GADTs
   , PolyKinds
   , RankNTypes
   , ViewPatterns
@@ -15,8 +16,10 @@
   , QuantifiedConstraints
   , MultiParamTypeClasses
   , UndecidableSuperClasses
-  , StandaloneKindSignatures
   #-}
+#if __GLASGOW_HASKELL__ >= 810
+{-# LANGUAGE StandaloneKindSignatures #-}
+#endif
 module Data.Functor.Cofree.Internal where
 
 import Data.Monoid (Ap(..))
@@ -45,5 +48,9 @@ deriveCofreeInstance' (pure . ConT -> cofree) ccofree (pure . ConT -> clss)
   = deriveInstance (cofreeDeriv ccofree)
       [t| forall a c. (c ~=> $clss, c ($cofree c a)) => $clss ($cofree c a) |]
 
+#if __GLASGOW_HASKELL__ < 810
+type a ~=> b = (forall x. (a :: (k -> Constraint)) x => (b :: (k -> Constraint)) x) :: Constraint
+#else
 type (~=>) :: (k -> Constraint) -> (k -> Constraint) -> Constraint
 type a ~=> b = forall x. a x => b x
+#endif
