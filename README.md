@@ -2,7 +2,7 @@ free-functors
 =============
 
 [![Hackage](https://img.shields.io/hackage/v/free-functors.svg)](https://hackage.haskell.org/package/free-functors)
-[![Build Status](https://travis-ci.org/sjoerdvisscher/free-functors.svg?branch=master)](https://travis-ci.org/github/sjoerdvisscher/free-functors)
+[![Build Status](https://github.com/sjoerdvisscher/free-functors/workflows/Haskell-CI/badge.svg)]
 
 A free functor is a left adjoint to a forgetful functor. It used to be the case
 that the only category that was easy to work with in Haskell was Hask itself, so
