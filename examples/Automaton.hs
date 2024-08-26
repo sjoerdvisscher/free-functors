@@ -6,13 +6,13 @@
   #-}
 module Automaton where
 
-import Data.Functor.Cofree
-import Data.Functor.Cofree.Internal
-import Data.DeriveLiftedInstances
+import Data.Functor.Cofree ( Cofree(..) )
+import Data.Functor.Cofree.Internal ( cofreeDeriv )
+import Data.DeriveLiftedInstances ( deriveInstance )
 
-import Control.Comonad
-import Data.Functor.Identity
-import Data.Functor.Compose
+import Control.Comonad ( Comonad(extract) )
+import Data.Functor.Identity ( Identity )
+import Data.Functor.Compose ( Compose(..) )
 
 
 class Action i s where
