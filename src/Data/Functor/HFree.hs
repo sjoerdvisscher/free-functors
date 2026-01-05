@@ -45,8 +45,6 @@ newtype HFree c f a = HFree { runHFree :: forall g. c g => (f :~> g) -> g a }
 instance (c ~=> Monad, c (HFree c f)) => Monad (HFree c f) where
   return = pure
   HFree f >>= g = HFree $ \k -> f k >>= rightAdjunct k . g
-  HFree f >> HFree g = HFree $ \k -> f k >> g k
-
 
 -- | Derive the instance of @`HFree` c f a@ for the class @c@,.
 --

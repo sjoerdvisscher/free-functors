@@ -1,4 +1,4 @@
-{-# OPTIONS_GHC -fno-warn-orphans -fno-warn-unused-matches #-}
+{-# OPTIONS_GHC -fno-warn-orphans -fno-warn-unused-matches -Wno-noncanonical-monoid-instances#-}
 {-# LANGUAGE
     RankNTypes
   , TypeFamilies
@@ -100,7 +100,6 @@ instance Applicative (Free c) where
   fs <*> as = transform (\k f -> rightAdjunct (k . f) as) fs
 
 instance Monad (Free c) where
-  return = unit
   as >>= f = transform (\k -> rightAdjunct k . f) as
 
 instance (forall f x. Applicative f => c (Ap f (Free c x))) => Foldable (Free c) where

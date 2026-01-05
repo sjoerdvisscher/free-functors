@@ -1,4 +1,7 @@
 CHANGELOG
+1.2 -> 1.3
+  - Add support for GHC 9.6 through 9.14
+  - Update to derive-lifted-instances v0.3
 
 1.1.2 -> 1.2
   - Add support for GHC 9.0, drop GHC 8.8

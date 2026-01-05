@@ -40,7 +40,7 @@ cofreeDeriv cofree = idDeriv {
   cst = \e -> [| const $e $kExp |], -- Suppress "Defined but not used: ‘k’" warning
   res = \e -> [| $(pure (ConE cofree)) $kExp $e |],
   eff = \e -> [| $(pure (ConE cofree)) $kExp <$> $e |],
-  inp = fmap (\vp -> ConP cofree [kPat, vp])
+  inp = fmap (\vp -> ConP cofree [] [kPat, vp])
 }
 
 deriveCofreeInstance' :: Name -> Name -> Name -> Q [Dec]
